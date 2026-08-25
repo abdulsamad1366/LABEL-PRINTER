@@ -1,13 +1,4 @@
 import React from 'react';
-import { 
-  Printer, 
-  FileSpreadsheet, 
-  Settings, 
-  Save, 
-  Grid, 
-  Target,
-  FileDown
-} from 'lucide-react';
 import { LabelTemplate } from '../types/label';
 
 interface HeaderProps {
@@ -32,83 +23,74 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenPrintModal
 }) => {
   return (
-    <header className="h-14 bg-slate-900 text-white flex items-center justify-between px-4 shadow-md z-40 border-b border-slate-800">
-      {/* Brand & Project Info */}
-      <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white font-extrabold text-sm shadow">
-          LS
-        </div>
-        <div>
-          <h1 className="font-bold text-base tracking-tight leading-none text-white">LabelStudio</h1>
-          <span className="text-xs text-slate-400 font-medium">{projectName}</span>
+    <header className="flex justify-between items-center w-full px-6 py-2 h-16 bg-surface-container-lowest border-b border-outline-variant shadow-xs z-50 shrink-0">
+      {/* Brand Logo & Active Preset Selector */}
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-extrabold text-sm shadow-xs">
+            <span className="material-symbols-outlined text-[20px]">label</span>
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-primary tracking-tight leading-none">LabelStudio</h1>
+            <span className="text-[11px] font-mono text-on-surface-variant">{projectName}</span>
+          </div>
         </div>
 
-        {/* Current Active Template Badge */}
+        <div className="h-6 w-px bg-outline-variant"></div>
+
+        {/* Template Badge Selector Button */}
         <button 
           onClick={onOpenTemplates}
-          className="ml-3 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-full text-xs text-slate-300 flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-md hover:bg-surface-container-low transition-colors border border-outline-variant text-sm font-medium text-on-surface-variant cursor-pointer"
         >
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span className="font-semibold text-white">{currentTemplate.sizeCode}</span>
-          <span className="text-slate-400">({currentTemplate.widthMm}×{currentTemplate.heightMm}mm • {currentTemplate.across}×{currentTemplate.rows})</span>
+          <span>{currentTemplate.sizeCode} ({currentTemplate.widthMm}×{currentTemplate.heightMm}mm • {currentTemplate.across * currentTemplate.rows} Labels)</span>
+          <span className="material-symbols-outlined text-[18px]">expand_more</span>
         </button>
       </div>
 
-      {/* Header Action Buttons */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onOpenTemplates}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Select label sheet template"
-        >
-          <Grid className="w-3.5 h-3.5" />
-          <span>Templates</span>
-        </button>
-
-        <button
+      {/* Right Navigation & Action Buttons */}
+      <nav className="flex items-center gap-2">
+        <button 
           onClick={onOpenMailMerge}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Upload CSV for mail merge"
+          className="text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer"
         >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Mail Merge (CSV)</span>
+          <span className="material-symbols-outlined text-[18px] text-emerald-600">table_chart</span>
+          <span>Import CSV</span>
         </button>
 
-        <button
-          onClick={onOpenAdmin}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Create/edit custom template specs"
-        >
-          <Settings className="w-3.5 h-3.5" />
-          <span>Template Admin</span>
-        </button>
-
-        <button
+        <button 
           onClick={onOpenCalibration}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Adjust printer offset calibration"
+          className="text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer"
         >
-          <Target className="w-3.5 h-3.5 text-amber-400" />
+          <span className="material-symbols-outlined text-[18px] text-amber-500">tune</span>
           <span>Calibration</span>
         </button>
 
-        <button
-          onClick={onSaveProject}
-          className="px-3 py-1.5 text-xs font-semibold text-slate-200 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Save project locally"
+        <button 
+          onClick={onOpenAdmin}
+          className="text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer"
         >
-          <Save className="w-3.5 h-3.5" />
+          <span className="material-symbols-outlined text-[18px]">settings</span>
+          <span>Admin Specs</span>
+        </button>
+
+        <button 
+          onClick={onSaveProject}
+          className="text-on-surface-variant hover:bg-surface-container-low hover:text-on-surface transition-colors px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[18px]">save</span>
           <span>Save</span>
         </button>
 
-        <button
+        <button 
           onClick={onOpenPrintModal}
-          className="ml-2 px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-md shadow-sm flex items-center gap-1.5 transition-colors cursor-pointer"
+          className="bg-primary-container text-on-primary px-4 py-2 rounded-lg text-xs font-semibold shadow-xs hover:opacity-90 active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
         >
-          <Printer className="w-4 h-4" />
-          <span>PRINT / EXPORT PDF</span>
+          <span className="material-symbols-outlined text-[18px]">print</span>
+          <span>Print A4 Sheet</span>
         </button>
-      </div>
+      </nav>
     </header>
   );
 };

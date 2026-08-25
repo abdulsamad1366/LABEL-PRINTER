@@ -4,8 +4,28 @@
 
 @layer base {
   body {
-    @apply bg-slate-100 text-slate-900 font-sans antialiased;
+    @apply bg-background text-on-surface font-sans antialiased;
   }
+}
+
+/* Ruler & Grid Utilities from Stitch Design System */
+.ruler-x {
+  background-image: linear-gradient(to right, #cbd5e1 1px, transparent 1px), linear-gradient(to right, #e2e8f0 1px, transparent 1px);
+  background-size: 10mm 100%, 1mm 50%;
+  background-position: 0 0, 0 100%;
+  background-repeat: repeat-x;
+}
+.ruler-y {
+  background-image: linear-gradient(to bottom, #cbd5e1 1px, transparent 1px), linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+  background-size: 100% 10mm, 50% 1mm;
+  background-position: 0 0, 100% 0;
+  background-repeat: repeat-y;
+}
+.canvas-grid {
+  background-image: 
+    linear-gradient(to right, rgba(226, 232, 240, 0.6) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(226, 232, 240, 0.6) 1px, transparent 1px);
+  background-size: 5mm 5mm;
 }
 
 /* Custom scrollbar styling */
@@ -24,7 +44,7 @@
   background: #94a3b8;
 }
 
-/* Interactive Canvas Styling */
+/* Interactive Canvas Box */
 .label-canvas-box {
   background-color: #ffffff;
   border: 1px dashed #cbd5e1;
@@ -32,10 +52,10 @@
 }
 
 .label-canvas-box:hover {
-  border-color: #3b82f6;
+  border-color: #2563eb;
 }
 
 .label-canvas-box.active {
   border-color: #2563eb;
-  box-shadow: 0 0 0 1px #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.25);
 }

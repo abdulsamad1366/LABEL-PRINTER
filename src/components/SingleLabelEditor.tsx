@@ -1,23 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { 
-  Type, 
-  Image as ImageIcon, 
-  Barcode, 
-  QrCode, 
-  Magnet, 
-  Undo, 
-  Redo,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  AlignStartVertical,
-  AlignCenterVertical,
-  AlignEndVertical,
-  Copy,
-  Trash2,
-  MoveUp,
-  MoveDown
-} from 'lucide-react';
 import { LabelTemplate, LabelElement, ElementType } from '../types/label';
 import { mmToPx, pxToMm, snapToGrid } from '../utils/mmToPx';
 import JsBarcode from 'jsbarcode';
@@ -96,7 +77,7 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
         ...newEl,
         content: 'Sample Text',
         fontSize: 10,
-        fontFamily: 'Arial',
+        fontFamily: 'Inter',
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#000000',
@@ -278,21 +259,21 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
   const labelH = mmToPx(template.heightMm, zoom);
 
   return (
-    <div className="flex flex-col h-full bg-slate-200">
-      {/* Editor Toolbar */}
-      <div className="h-12 bg-white border-b border-slate-200 px-4 flex items-center justify-between shadow-xs">
+    <div className="flex flex-col h-full bg-[#f1f5f9]">
+      {/* Stitch Canvas Toolbar Header */}
+      <div className="h-12 bg-surface-container-lowest border-b border-outline-variant px-4 flex items-center justify-between shadow-xs shrink-0 z-30">
         {/* Add Element Buttons */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-1.5">
           <button
             onClick={() => addElement('text')}
-            className="px-2.5 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+            className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <Type className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[18px]">text_fields</span>
             <span>Text</span>
           </button>
 
-          <label className="px-2.5 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer">
-            <ImageIcon className="w-3.5 h-3.5" />
+          <label className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer">
+            <span className="material-symbols-outlined text-[18px]">image</span>
             <span>Image</span>
             <input
               type="file"
@@ -326,137 +307,137 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
 
           <button
             onClick={() => addElement('barcode')}
-            className="px-2.5 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+            className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <Barcode className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
             <span>Barcode</span>
           </button>
 
           <button
             onClick={() => addElement('qrcode')}
-            className="px-2.5 py-1.5 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-md text-xs font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+            className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
           >
-            <QrCode className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[18px]">qr_code</span>
             <span>QR Code</span>
           </button>
         </div>
 
-        {/* Alignment & Action Controls */}
+        {/* Alignment & Action Tools */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => alignElement('left')}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Align Left"
           >
-            <AlignLeft className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">format_align_left</span>
           </button>
           <button
             onClick={() => alignElement('centerH')}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Center Horizontally"
           >
-            <AlignCenter className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">format_align_center</span>
           </button>
           <button
             onClick={() => alignElement('right')}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Align Right"
           >
-            <AlignRight className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">format_align_right</span>
           </button>
-          <div className="w-px h-4 bg-slate-300 mx-1" />
+          <div className="w-px h-4 bg-outline-variant mx-1" />
           <button
             onClick={() => alignElement('top')}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Align Top"
           >
-            <AlignStartVertical className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">vertical_align_top</span>
           </button>
           <button
             onClick={() => alignElement('centerV')}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Center Vertically"
           >
-            <AlignCenterVertical className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">vertical_align_center</span>
           </button>
           <button
             onClick={() => alignElement('bottom')}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Align Bottom"
           >
-            <AlignEndVertical className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
           </button>
-          <div className="w-px h-4 bg-slate-300 mx-1" />
+          <div className="w-px h-4 bg-outline-variant mx-1" />
           <button
             onClick={duplicateElement}
             disabled={!selectedElement}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Duplicate"
           >
-            <Copy className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">content_copy</span>
           </button>
           <button
             onClick={deleteElement}
             disabled={!selectedElement}
-            className="p-1.5 text-red-600 hover:bg-red-50 rounded disabled:opacity-30"
+            className="p-1.5 text-error hover:bg-error-container hover:text-on-error-container rounded-md disabled:opacity-30 transition-colors"
             title="Delete"
           >
-            <Trash2 className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">delete</span>
           </button>
         </div>
 
-        {/* Snap & Zoom Controls */}
+        {/* Grid Snap & Zoom Controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setGridSnap(!gridSnap)}
-            className={`p-1.5 border rounded-md text-xs font-medium flex items-center gap-1 transition-colors ${
-              gridSnap ? 'bg-blue-50 border-blue-300 text-blue-600' : 'bg-white border-slate-300 text-slate-500'
+            className={`px-2.5 py-1 border rounded-lg text-xs font-mono font-medium flex items-center gap-1 transition-all cursor-pointer ${
+              gridSnap ? 'bg-primary-container text-on-primary border-primary-container' : 'bg-surface border-outline-variant text-on-surface-variant'
             }`}
-            title="Snap to grid"
+            title="Snap to Grid"
           >
-            <Magnet className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[16px]">grid_4x4</span>
             <span>Snap</span>
           </button>
 
           <select
             value={gridSize}
             onChange={(e) => setGridSize(parseFloat(e.target.value))}
-            className="px-2 py-1 bg-white border border-slate-300 rounded-md text-xs"
+            className="px-2 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-mono"
           >
             <option value="0.5">0.5 mm</option>
             <option value="1">1.0 mm</option>
             <option value="2">2.0 mm</option>
           </select>
 
-          <div className="w-px h-4 bg-slate-300 mx-1" />
+          <div className="w-px h-4 bg-outline-variant mx-1" />
 
           <button
             onClick={handleUndo}
             disabled={historyIdx <= 0}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Undo"
           >
-            <Undo className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">undo</span>
           </button>
           <button
             onClick={handleRedo}
             disabled={historyIdx >= history.length - 1}
-            className="p-1.5 text-slate-600 hover:bg-slate-100 rounded disabled:opacity-30"
+            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
             title="Redo"
           >
-            <Redo className="w-4 h-4" />
+            <span className="material-symbols-outlined text-[18px]">redo</span>
           </button>
 
           <select
             value={zoom}
             onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="px-2 py-1 bg-white border border-slate-300 rounded-md text-xs font-semibold text-slate-700"
+            className="px-2 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-mono font-medium text-on-surface"
           >
             <option value="1.5">150%</option>
             <option value="2.0">200%</option>
@@ -466,20 +447,31 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
         </div>
       </div>
 
-      {/* Editor Viewport Canvas with Rulers */}
+      {/* Stitch Millimeter Viewport Canvas with Rulers */}
       <div 
         ref={containerRef}
         onClick={() => onSelectElement(null)}
-        className="flex-1 overflow-auto p-12 flex items-center justify-center relative select-none"
+        className="flex-1 overflow-auto p-12 relative flex items-center justify-center select-none"
       >
+        {/* Horizontal Top Ruler */}
+        <div className="absolute top-0 left-8 right-0 h-6 ruler-x bg-surface-container-lowest border-b border-outline-variant z-10 pointer-events-none">
+          <span className="absolute left-0 top-1 font-mono text-[10px] text-outline ml-1">0mm</span>
+          <span className="absolute left-[70mm] top-1 font-mono text-[10px] text-outline ml-1">{template.widthMm}mm</span>
+        </div>
+
+        {/* Vertical Left Ruler */}
+        <div className="absolute left-0 top-8 bottom-0 w-6 ruler-y bg-surface-container-lowest border-r border-outline-variant z-10 pointer-events-none">
+          <span className="absolute top-0 left-1 font-mono text-[10px] text-outline mt-1 origin-top-left -rotate-90">0mm</span>
+          <span className="absolute top-[37mm] left-1 font-mono text-[10px] text-outline mt-1 origin-top-left -rotate-90">{template.heightMm}mm</span>
+        </div>
+
+        {/* Interactive Label Container */}
         <div 
-          className="bg-white shadow-2xl relative border border-slate-300 rounded-xs transition-all"
+          className="bg-surface-container-lowest shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1)] relative canvas-grid border border-outline-variant overflow-hidden transition-all rounded-xs"
           style={{ width: `${labelW}px`, height: `${labelH}px` }}
         >
-          {/* Label Header Indicator */}
-          <div className="absolute top-1 left-2 text-[9px] font-bold text-slate-400 pointer-events-none">
-            {template.widthMm} × {template.heightMm} mm
-          </div>
+          {/* Printable Safety Margin Boundary Line */}
+          <div className="absolute inset-[2mm] border border-dashed border-error/30 pointer-events-none z-10" />
 
           {/* Render Elements */}
           {elements.map(el => {
@@ -494,8 +486,8 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
                 key={el.id}
                 onMouseDown={(e) => handleMouseDown(e, el.id)}
                 onClick={(e) => e.stopPropagation()}
-                className={`absolute box-border cursor-move group ${
-                  isSelected ? 'outline-2 outline-blue-600 ring-2 ring-blue-500/20' : 'hover:outline-1 hover:outline-blue-400'
+                className={`absolute box-border cursor-move group transition-shadow ${
+                  isSelected ? 'outline-2 outline-primary shadow-md' : 'hover:outline-1 hover:outline-primary/50'
                 }`}
                 style={{
                   left: `${xPx}px`,
@@ -508,24 +500,24 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
                 {/* Element Content */}
                 <RenderElementInner el={el} zoom={zoom} />
 
-                {/* Resize Handles */}
+                {/* Corner Resize Handles */}
                 {isSelected && (
                   <>
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'nw')}
-                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nwse-resize z-20"
+                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nwse-resize z-20"
                     />
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'ne')}
-                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nesw-resize z-20"
+                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nesw-resize z-20"
                     />
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'sw')}
-                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nesw-resize z-20"
+                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nesw-resize z-20"
                     />
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'se')}
-                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nwse-resize z-20"
+                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nwse-resize z-20"
                     />
                   </>
                 )}
@@ -569,7 +561,7 @@ const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, 
       <div 
         className="w-full h-full flex items-center overflow-hidden leading-tight whitespace-pre-wrap break-words"
         style={{
-          fontFamily: el.fontFamily || 'Arial',
+          fontFamily: el.fontFamily || 'Inter',
           fontSize: `${fontSizePx}px`,
           fontWeight: el.fontWeight || 'normal',
           fontStyle: el.fontStyle || 'normal',
@@ -586,7 +578,7 @@ const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, 
     return el.src ? (
       <img src={el.src} alt="element" className="w-full h-full object-contain pointer-events-none" />
     ) : (
-      <div className="w-full h-full bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-xs text-slate-400">
+      <div className="w-full h-full bg-surface-container-low border border-dashed border-outline-variant flex items-center justify-center text-xs text-on-surface-variant font-mono">
         Image Placeholder
       </div>
     );

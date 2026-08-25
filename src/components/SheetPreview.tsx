@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Maximize } from 'lucide-react';
 import { LabelTemplate, LabelElement, DataRow } from '../types/label';
 import { mmToPx } from '../utils/mmToPx';
 
@@ -24,6 +23,7 @@ export const SheetPreview: React.FC<SheetPreviewProps> = ({
 }) => {
   const [zoom, setZoom] = useState<number>(0.85);
   const [currentPage, setCurrentPage] = useState<number>(0);
+  const [showGridOverlay, setShowGridOverlay] = useState<boolean>(true);
 
   const {
     widthMm, heightMm, across, rows,
@@ -39,67 +39,84 @@ export const SheetPreview: React.FC<SheetPreviewProps> = ({
   const sheetHeightPx = mmToPx(sheetHeightMm, zoom);
 
   return (
-    <div className="flex flex-col h-full bg-slate-300 relative overflow-hidden">
-      {/* Top Toolbar */}
-      <div className="h-10 bg-slate-800 text-white px-4 flex items-center justify-between shadow-xs z-10 text-xs">
-        <div className="flex items-center gap-2 font-medium">
-          <span className="text-slate-400">A4 Live Sheet Preview</span>
-          <span className="bg-slate-700 text-slate-200 px-2 py-0.5 rounded font-mono">
-            {sheetWidthMm} × {sheetHeightMm} mm
+    <div className="flex flex-col h-full bg-[#f1f5f9] relative overflow-hidden">
+      {/* Stitch Batch Secondary Control Bar */}
+      <div className="h-11 bg-surface-container-lowest border-b border-outline-variant px-6 flex items-center justify-between shadow-xs z-20 text-xs shrink-0">
+        
+        {/* Left Page & Total Label Indicators */}
+        <div className="flex items-center gap-3">
+          <span className="font-semibold text-on-surface flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[18px] text-primary">grid_view</span>
+            <span>Batch Print Preview</span>
+          </span>
+          <span className="font-mono text-[11px] bg-surface-container-high text-on-surface-variant px-2 py-0.5 rounded-md">
+            {across}×{rows} Grid • {across * rows} Labels/Sheet
           </span>
         </div>
 
         {/* Multi-Page Navigation for CSV Data */}
         {totalPages > 1 && (
-          <div className="flex items-center gap-2 bg-slate-700 px-3 py-1 rounded-full text-slate-200">
+          <div className="flex items-center gap-2 bg-surface-container-low px-3 py-1 rounded-full border border-outline-variant">
             <button
               onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
               disabled={currentPage === 0}
-              className="hover:text-white disabled:opacity-30"
+              className="hover:text-primary disabled:opacity-30 flex items-center transition-colors cursor-pointer"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <span className="material-symbols-outlined text-[18px]">chevron_left</span>
             </button>
-            <span className="font-semibold text-xs">
+            <span className="font-mono text-xs font-medium text-on-surface">
               Page {currentPage + 1} of {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
               disabled={currentPage === totalPages - 1}
-              className="hover:text-white disabled:opacity-30"
+              className="hover:text-primary disabled:opacity-30 flex items-center transition-colors cursor-pointer"
             >
-              <ChevronRight className="w-4 h-4" />
+              <span className="material-symbols-outlined text-[18px]">chevron_right</span>
             </button>
           </div>
         )}
 
-        {/* Zoom Controls */}
-        <div className="flex items-center gap-1.5">
+        {/* Grid Overlay Toggle & Zoom Controls */}
+        <div className="flex items-center gap-3">
           <button
-            onClick={() => setZoom(z => Math.max(0.3, z - 0.1))}
-            className="p-1 hover:bg-slate-700 rounded text-slate-300"
-            title="Zoom out"
+            onClick={() => setShowGridOverlay(!showGridOverlay)}
+            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-medium flex items-center gap-1 transition-all cursor-pointer ${
+              showGridOverlay ? 'bg-primary-container text-on-primary' : 'bg-surface border border-outline-variant text-on-surface-variant'
+            }`}
           >
-            <ZoomOut className="w-3.5 h-3.5" />
+            <span className="material-symbols-outlined text-[16px]">grid_on</span>
+            <span>Grid Overlay</span>
           </button>
 
-          <span className="font-mono text-xs w-12 text-center text-slate-300">
-            {Math.round(zoom * 100)}%
-          </span>
+          <div className="flex items-center gap-1 bg-surface border border-outline-variant rounded-lg p-0.5">
+            <button
+              onClick={() => setZoom(z => Math.max(0.4, z - 0.1))}
+              className="p-1 hover:bg-surface-container-high rounded-md text-on-surface-variant transition-colors cursor-pointer"
+              title="Zoom Out"
+            >
+              <span className="material-symbols-outlined text-[16px]">zoom_out</span>
+            </button>
 
-          <button
-            onClick={() => setZoom(z => Math.min(1.5, z + 0.1))}
-            className="p-1 hover:bg-slate-700 rounded text-slate-300"
-            title="Zoom in"
-          >
-            <ZoomIn className="w-3.5 h-3.5" />
-          </button>
+            <span className="font-mono text-xs w-12 text-center text-on-surface font-medium">
+              {Math.round(zoom * 100)}%
+            </span>
+
+            <button
+              onClick={() => setZoom(z => Math.min(1.5, z + 0.1))}
+              className="p-1 hover:bg-surface-container-high rounded-md text-on-surface-variant transition-colors cursor-pointer"
+              title="Zoom In"
+            >
+              <span className="material-symbols-outlined text-[16px]">zoom_in</span>
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Scrollable Viewport Area */}
-      <div className="flex-1 overflow-auto p-8 flex items-center justify-center">
+      <div className="flex-1 overflow-auto p-10 flex items-center justify-center relative select-none">
         <div
-          className="bg-white shadow-2xl relative transition-all duration-100 ease-out"
+          className="bg-surface-container-lowest shadow-[0_8px_30px_rgb(0,0,0,0.12)] relative border border-outline-variant transition-all duration-100 ease-out"
           style={{ width: `${sheetWidthPx}px`, height: `${sheetHeightPx}px` }}
         >
           {/* Render Label Grid */}
@@ -134,7 +151,11 @@ export const SheetPreview: React.FC<SheetPreviewProps> = ({
                   key={`${r}-${c}`}
                   onClick={() => onSelectLabelIndex(gridIndex)}
                   className={`absolute box-border cursor-pointer transition-all ${
-                    isSelected ? 'border-2 border-blue-600 bg-white ring-2 ring-blue-500/20' : 'border border-dashed border-slate-300 hover:border-blue-400 bg-white/90'
+                    isSelected
+                      ? 'border-2 border-primary bg-surface-container-lowest shadow-md'
+                      : showGridOverlay
+                      ? 'border border-dashed border-primary/40 bg-surface-container-lowest/90 hover:border-primary'
+                      : 'border border-outline-variant/30 bg-surface-container-lowest hover:border-outline-variant'
                   }`}
                   style={{
                     left: `${xPx}px`,
@@ -144,12 +165,12 @@ export const SheetPreview: React.FC<SheetPreviewProps> = ({
                     borderRadius: `${radPx}px`
                   }}
                 >
-                  {/* Grid Cell Sequence Tag */}
-                  <span className="absolute top-0.5 left-1 text-[8px] font-bold text-slate-300 pointer-events-none">
+                  {/* Sequence Badge Tag */}
+                  <span className="absolute top-0.5 left-1 font-mono text-[8px] font-bold text-outline pointer-events-none opacity-60">
                     #{globalIndex + 1}
                   </span>
 
-                  {/* Render Elements inside label preview */}
+                  {/* Render Elements Inside Label Cell */}
                   {currentElements.map(el => {
                     const elXPx = mmToPx(el.x, zoom);
                     const elYPx = mmToPx(el.y, zoom);
@@ -189,7 +210,7 @@ const PreviewElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el,
       <div
         className="w-full h-full flex items-center overflow-hidden leading-tight whitespace-pre-wrap break-words"
         style={{
-          fontFamily: el.fontFamily || 'Arial',
+          fontFamily: el.fontFamily || 'Inter',
           fontSize: `${fontSizePx}px`,
           fontWeight: el.fontWeight || 'normal',
           fontStyle: el.fontStyle || 'normal',
@@ -207,11 +228,11 @@ const PreviewElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el,
   }
 
   if (el.type === 'barcode') {
-    return <div className="w-full h-full border border-slate-800 bg-slate-100 text-[8px] flex items-center justify-center font-mono">||||| {el.value}</div>;
+    return <div className="w-full h-full border border-on-surface/40 bg-surface-container-low text-[8px] flex items-center justify-center font-mono text-on-surface">||||| {el.value}</div>;
   }
 
   if (el.type === 'qrcode') {
-    return <div className="w-full h-full border border-slate-800 bg-slate-100 text-[8px] flex items-center justify-center font-mono">QR</div>;
+    return <div className="w-full h-full border border-on-surface/40 bg-surface-container-low text-[8px] flex items-center justify-center font-mono text-on-surface">QR</div>;
   }
 
   return null;

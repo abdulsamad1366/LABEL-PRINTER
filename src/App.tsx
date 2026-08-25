@@ -12,7 +12,6 @@ import { CalibrationModal } from './components/CalibrationModal';
 import { LabelTemplate, LabelElement, CalibrationSettings, DataRow, Project } from './types/label';
 import { StorageManager } from './utils/storage';
 import { SEED_TEMPLATES } from './data/seedPresets';
-import { Layers, LayoutGrid } from 'lucide-react';
 
 const STARTER_ELEMENTS: LabelElement[] = [
   {
@@ -24,7 +23,7 @@ const STARTER_ELEMENTS: LabelElement[] = [
     width: 57.5,
     height: 5,
     fontSize: 10,
-    fontFamily: 'Arial',
+    fontFamily: 'Inter',
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#0f172a'
@@ -38,10 +37,10 @@ const STARTER_ELEMENTS: LabelElement[] = [
     width: 57.5,
     height: 4.5,
     fontSize: 8.5,
-    fontFamily: 'Arial',
+    fontFamily: 'Inter',
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#1e3a8a'
+    color: '#004ac6'
   },
   {
     id: 'el_price',
@@ -52,7 +51,7 @@ const STARTER_ELEMENTS: LabelElement[] = [
     width: 57.5,
     height: 4,
     fontSize: 8,
-    fontFamily: 'Arial',
+    fontFamily: 'Inter',
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#047857'
@@ -86,7 +85,7 @@ const STARTER_ELEMENTS: LabelElement[] = [
     width: 57.5,
     height: 3.5,
     fontSize: 7.5,
-    fontFamily: 'monospace',
+    fontFamily: 'JetBrains Mono',
     fontWeight: 'normal',
     textAlign: 'center',
     color: '#334155'
@@ -95,7 +94,7 @@ const STARTER_ELEMENTS: LabelElement[] = [
 
 export function App() {
   const [templates, setTemplates] = useState<LabelTemplate[]>([]);
-  const [activeTemplate, setActiveTemplate] = useState<LabelTemplate>(SEED_TEMPLATES[12]); // Default 12A
+  const [activeTemplate, setActiveTemplate] = useState<LabelTemplate>(SEED_TEMPLATES[12]); // Default 12A (24 labels)
   const [elements, setElements] = useState<LabelElement[]>(STARTER_ELEMENTS);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [applyToAll, setApplyToAll] = useState<boolean>(true);
@@ -136,7 +135,7 @@ export function App() {
       csvData
     };
     StorageManager.saveProject(proj);
-    alert(`Project "${projectName}" saved to LocalStorage.`);
+    alert(`Project "${projectName}" saved to local storage.`);
   };
 
   const handleSaveCustomTemplate = (newTpl: LabelTemplate) => {
@@ -159,8 +158,8 @@ export function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-slate-100">
-      {/* Navbar Header */}
+    <div className="flex flex-col h-screen overflow-hidden bg-background text-on-surface">
+      {/* Stitch Navbar Header */}
       <Header
         currentTemplate={activeTemplate}
         projectName={projectName}
@@ -172,46 +171,88 @@ export function App() {
         onOpenPrintModal={() => setIsPrintModalOpen(true)}
       />
 
-      {/* Main Workspace Grid */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main Workspace Body */}
+      <div className="flex flex-1 overflow-hidden">
         
-        {/* Left Side: View Switcher & Canvas Area */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Sub Header View Switcher Tabs */}
-          <div className="h-10 bg-slate-200 border-b border-slate-300 px-4 flex items-center justify-between">
-            <div className="flex items-center gap-1 bg-slate-300 p-1 rounded-lg">
-              <button
-                onClick={() => setActiveTab('editor')}
-                className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
-                  activeTab === 'editor' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <Layers className="w-3.5 h-3.5" />
-                <span>Single-Label Canvas Editor</span>
-              </button>
+        {/* Stitch Left SideNav Sidebar */}
+        <aside className="w-sidebar_width bg-surface-container-lowest border-r border-outline-variant flex flex-col z-40 shrink-0 h-full overflow-y-auto shadow-xs">
+          <div className="p-4 border-b border-outline-variant">
+            <h2 className="font-semibold text-sm text-on-surface mb-0.5">Label Designer</h2>
+            <p className="font-mono text-xs text-on-surface-variant">{activeTemplate.sizeCode} ({activeTemplate.widthMm}×{activeTemplate.heightMm}mm)</p>
+          </div>
+          
+          <nav className="flex-1 p-3 flex flex-col gap-1.5">
+            <button 
+              onClick={() => setActiveTab('editor')}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-mono text-xs transition-all w-full text-left cursor-pointer ${
+                activeTab === 'editor' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">category</span>
+              <span>Design Canvas</span>
+            </button>
 
-              <button
-                onClick={() => setActiveTab('preview')}
-                className={`px-3 py-1 text-xs font-bold rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
-                  activeTab === 'preview' ? 'bg-white text-blue-600 shadow-xs' : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>A4 Sheet Live Preview ({activeTemplate.across * activeTemplate.rows} Labels)</span>
-              </button>
-            </div>
+            <button 
+              onClick={() => setActiveTab('preview')}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-mono text-xs transition-all w-full text-left cursor-pointer ${
+                activeTab === 'preview' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[20px]">grid_view</span>
+              <span>Full Sheet Preview</span>
+            </button>
 
-            <div className="text-xs text-slate-500 font-medium flex items-center gap-3">
-              {csvData && csvData.length > 0 && (
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-full text-[11px]">
-                  Mail Merge Active ({csvData.length} records)
-                </span>
-              )}
-              <span>Paper: A4 (210×297 mm)</span>
-            </div>
+            <button 
+              onClick={() => setIsTemplatePickerOpen(true)}
+              className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-all font-mono text-xs rounded-lg w-full text-left cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">style</span>
+              <span>Presets & Specs</span>
+            </button>
+
+            <button 
+              onClick={() => setIsMailMergeOpen(true)}
+              className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-all font-mono text-xs rounded-lg w-full text-left cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[20px]">table_view</span>
+              <span>Data Source ({csvData ? csvData.length : 0})</span>
+            </button>
+          </nav>
+
+          <div className="p-4 border-t border-outline-variant">
+            <button 
+              onClick={() => setIsTemplatePickerOpen(true)}
+              className="w-full py-2 border border-primary text-primary rounded-lg font-medium text-xs hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-[18px]">widgets</span>
+              <span>Change Template</span>
+            </button>
+          </div>
+        </aside>
+
+        {/* Center Workspace & Floating View Toggle */}
+        <main className="flex-1 bg-[#f1f5f9] flex flex-col relative overflow-hidden">
+          {/* Floating View Switcher Pill Pill */}
+          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-surface-container-lowest rounded-full shadow-md border border-outline-variant p-1 flex gap-1 z-30">
+            <button
+              onClick={() => setActiveTab('editor')}
+              className={`px-4 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
+                activeTab === 'editor' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              Single Label
+            </button>
+            <button
+              onClick={() => setActiveTab('preview')}
+              className={`px-4 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
+                activeTab === 'preview' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
+              }`}
+            >
+              Full Sheet Preview
+            </button>
           </div>
 
-          {/* Active Canvas View */}
+          {/* Active View Container */}
           <div className="flex-1 overflow-hidden">
             {activeTab === 'editor' ? (
               <SingleLabelEditor
@@ -236,9 +277,9 @@ export function App() {
               />
             )}
           </div>
-        </div>
+        </main>
 
-        {/* Right Side: Element Inspector Sidebar */}
+        {/* Stitch Right Side Inspector */}
         <ElementInspector
           selectedElement={selectedElement}
           onUpdateElement={handleUpdateSelectedElement}
@@ -258,6 +299,11 @@ export function App() {
               setSelectedElementId(clone.id);
             }
           }}
+          csvData={csvData}
+          calibration={calibration}
+          onUpdateCalibration={handleSaveCalibration}
+          onOpenPrintModal={() => setIsPrintModalOpen(true)}
+          onSaveProject={handleSaveProject}
         />
 
       </div>
