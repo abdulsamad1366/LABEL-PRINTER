@@ -151,19 +151,6 @@ function App() {
     setCurrentUser(loadedUser);
   }, []);
 
-  const handleLaunchDemo = () => {
-    const demoUser: User = {
-      id: 'usr_demo_admin',
-      name: 'Sarah Connor',
-      email: 'admin@labelstudio.com',
-      role: 'Production Manager',
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
-    };
-    StorageManager.saveUser(demoUser);
-    setCurrentUser(demoUser);
-    setActiveERPModule('studio');
-  };
-
   const handleSaveProject = () => {
     const proj: Project = {
       id: `proj_${Date.now()}`,
@@ -209,7 +196,6 @@ function App() {
       <>
         <LandingPage
           onOpenLogin={() => setIsLoginOpen(true)}
-          onLaunchDemo={handleLaunchDemo}
         />
         <LoginModal
           isOpen={isLoginOpen}
@@ -225,7 +211,7 @@ function App() {
 
   // 2. IF LOGGED IN -> RENDER FULL ERP WORKSPACE!
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background text-on-surface select-none">
+    <div className="flex flex-col h-screen overflow-hidden bg-[#f8fafc] text-slate-900 select-none font-sans antialiased">
       {/* Stitch Navbar Header */}
       <Header
         currentTemplate={activeTemplate}
@@ -249,21 +235,22 @@ function App() {
       {/* Main ERP Workspace Body */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* ERP Module Navigation Sidebar */}
-        <aside className="w-56 bg-stitch-panel border-r border-stitch-border flex flex-col z-40 shrink-0 h-full overflow-y-auto text-stitch-text">
-          <div className="p-4 border-b border-stitch-border">
-            <span className="text-[10px] font-bold text-stitch-muted uppercase tracking-wider block">ERP Navigation</span>
+        {/* Light ERP Navigation Sidebar */}
+        <aside className="w-60 bg-white border-r border-slate-200 flex flex-col z-40 shrink-0 h-full overflow-y-auto text-slate-800 antialiased shadow-2xs">
+          
+          <div className="p-4 border-b border-slate-100">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">ERP NAVIGATION</span>
             <div className="mt-1 flex items-center justify-between">
-              <span className="font-mono text-xs font-bold text-white">Production Suite</span>
-              <span className="text-[10px] text-teal-400 font-mono">v2.0</span>
+              <span className="font-semibold text-xs text-slate-700">Production Suite</span>
+              <span className="text-[10px] text-blue-600 font-mono font-bold">v2.0</span>
             </div>
           </div>
 
-          <nav className="p-2 space-y-1 flex-1">
+          <nav className="p-3 space-y-1.5 flex-1">
             <button 
               onClick={() => setActiveERPModule('dashboard')}
-              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
-                activeERPModule === 'dashboard' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3 transition-all cursor-pointer ${
+                activeERPModule === 'dashboard' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">space_dashboard</span>
@@ -272,8 +259,8 @@ function App() {
 
             <button 
               onClick={() => setActiveERPModule('studio')}
-              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
-                activeERPModule === 'studio' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3 transition-all cursor-pointer ${
+                activeERPModule === 'studio' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">design_services</span>
@@ -282,8 +269,8 @@ function App() {
 
             <button 
               onClick={() => setActiveERPModule('inventory')}
-              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
-                activeERPModule === 'inventory' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3 transition-all cursor-pointer ${
+                activeERPModule === 'inventory' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">inventory_2</span>
@@ -292,48 +279,48 @@ function App() {
 
             <button 
               onClick={() => setActiveERPModule('audit')}
-              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
-                activeERPModule === 'audit' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
+              className={`w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center gap-3 transition-all cursor-pointer ${
+                activeERPModule === 'audit' ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
               <span className="material-symbols-outlined text-[18px]">history</span>
               <span>Print Audit Logs</span>
             </button>
 
-            <div className="pt-4 pb-2">
-              <span className="text-[10px] font-bold text-stitch-muted uppercase tracking-wider block px-3">Production Quick Tools</span>
+            <div className="pt-5 pb-2">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block px-3">PRODUCTION QUICK TOOLS</span>
             </div>
 
             <button 
               onClick={() => setIsTemplatePickerOpen(true)}
-              className="w-full px-3 py-2 text-stitch-muted hover:text-white hover:bg-stitch-card rounded-lg text-xs font-medium flex items-center gap-2.5 transition-all cursor-pointer"
+              className="w-full px-3.5 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">square_foot</span>
+              <span className="material-symbols-outlined text-[18px] text-slate-400">square_foot</span>
               <span>Presets & Specs ({templates.length})</span>
             </button>
 
             <button 
               onClick={() => setIsMailMergeOpen(true)}
-              className="w-full px-3 py-2 text-stitch-muted hover:text-white hover:bg-stitch-card rounded-lg text-xs font-medium flex items-center gap-2.5 transition-all cursor-pointer"
+              className="w-full px-3.5 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl text-xs font-semibold flex items-center gap-3 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">database</span>
+              <span className="material-symbols-outlined text-[18px] text-emerald-500">database</span>
               <span>CSV Mail Merge ({csvData ? csvData.length : 0})</span>
             </button>
           </nav>
 
-          <div className="p-3 border-t border-stitch-border">
+          <div className="p-3 border-t border-slate-100">
             <button 
               onClick={() => setIsTemplatePickerOpen(true)}
-              className="w-full py-2 bg-stitch-card border border-stitch-border text-blue-400 hover:text-white rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
             >
-              <span className="material-symbols-outlined text-[16px]">widgets</span>
+              <span className="material-symbols-outlined text-[16px] text-blue-600">widgets</span>
               <span>Change Active Specs</span>
             </button>
           </div>
         </aside>
 
         {/* Module Content Container */}
-        <main className="flex-1 bg-stitch-bg flex flex-col relative overflow-hidden">
+        <main className="flex-1 bg-[#f8fafc] flex flex-col relative overflow-hidden">
           {activeERPModule === 'dashboard' && (
             <ERPDashboard
               currentUser={currentUser}

@@ -33,7 +33,45 @@ export async function supabaseSignOut() {
   await supabase.auth.signOut();
 }
 
-// --- Database Helpers ---
+// --- Database & Audit Log Helpers ---
+
+/**
+ * Record user login activity event into Supabase user_login_history table
+ */
+export async function dbLogUserLogin(user: User) {
+  try {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(user.id);
+    await supabase.from('user_login_history').insert({
+      user_id: isUuid ? user.id : null,
+      user_name: user.name,
+      user_email: user.email,
+      user_role: user.role,
+      login_timestamp: new Date().toISOString(),
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : 'Browser Client'
+    });
+  } catch (err) {
+    console.warn('Supabase dbLogUserLogin error:', err);
+  }
+}
+
+/**
+ * Fetch past user login history from Supabase
+ */
+export async function dbFetchLoginHistory() {
+  try {
+    const { data, error } = await supabase
+      .from('user_login_history')
+      .select('*')
+      .order('login_timestamp', { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.warn('Supabase dbFetchLoginHistory error:', err);
+    return [];
+  }
+}
+
 export async function dbSaveProject(project: Project, userId?: string) {
   try {
     await supabase.from('projects').upsert({

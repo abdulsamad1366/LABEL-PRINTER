@@ -91,3 +91,18 @@ CREATE TABLE IF NOT EXISTS public.print_audit_logs (
 ALTER TABLE public.print_audit_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Audit logs viewable by authenticated users" ON public.print_audit_logs FOR SELECT USING (true);
 CREATE POLICY "Audit logs insertable by anyone" ON public.print_audit_logs FOR INSERT WITH CHECK (true);
+
+-- 6. Create User Login History Table (FOR USER LOGIN AUDIT TRAIL)
+CREATE TABLE IF NOT EXISTS public.user_login_history (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users ON DELETE CASCADE,
+  user_name TEXT,
+  user_email TEXT NOT NULL,
+  user_role TEXT,
+  login_timestamp TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL,
+  user_agent TEXT
+);
+
+ALTER TABLE public.user_login_history ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Login history viewable by everyone" ON public.user_login_history FOR SELECT USING (true);
+CREATE POLICY "Login history insertable by anyone" ON public.user_login_history FOR INSERT WITH CHECK (true);

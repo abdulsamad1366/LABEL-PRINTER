@@ -12,7 +12,8 @@ import {
   LogOut,
   LogIn,
   ChevronDown,
-  Shield
+  Shield,
+  Menu
 } from 'lucide-react';
 import { LabelTemplate, User } from '../types/label';
 
@@ -49,166 +50,184 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
+  const getInitials = (name?: string, email?: string) => {
+    if (name) {
+      const parts = name.trim().split(' ');
+      if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+      return name.slice(0, 2).toUpperCase();
+    }
+    if (email) return email.slice(0, 2).toUpperCase();
+    return 'AS';
+  };
+
+  const displayName = currentUser?.name || currentUser?.email?.split('@')[0] || 'asamad9280';
+
   return (
-    <header className="h-14 bg-stitch-bg border-b border-stitch-border px-4 flex items-center justify-between text-stitch-text z-40 select-none">
-      {/* Brand & Project Info */}
+    <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between text-slate-900 z-40 select-none antialiased shadow-xs">
+      
+      {/* 1. Left Brand & Project Title */}
       <div className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center text-white font-extrabold text-xs shadow-md">
-          LS
-        </div>
+        <button className="p-1 text-slate-500 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors cursor-pointer lg:hidden">
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <img 
+          src="/logo.png" 
+          alt="LabelStudio ERP Logo" 
+          className="w-9 h-9 rounded-xl object-contain shadow-2xs" 
+        />
+        
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="font-bold text-sm text-white tracking-tight leading-none">LabelStudio Pro</h1>
-            <span className="px-1.5 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] font-mono font-bold rounded border border-blue-500/30">
+            <h1 className="font-extrabold text-sm text-slate-900 tracking-tight leading-none">LabelStudio Pro</h1>
+            <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-mono font-bold rounded-md border border-blue-200">
               STITCH UI
             </span>
           </div>
-          <span className="text-[11px] text-stitch-muted font-medium">{projectName}</span>
+          <span className="text-[11px] text-slate-400 font-medium block mt-0.5">{projectName}</span>
         </div>
+      </div>
 
-        {/* Current Active Template Badge */}
+      {/* 2. Center Workspace Controls Toolbar */}
+      <div className="hidden xl:flex items-center gap-3">
+        {/* Active Template Specs Badge */}
         <button 
           onClick={onOpenTemplates}
-          className="ml-2 px-3 py-1 bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-full text-xs text-stitch-text flex items-center gap-2 transition-colors cursor-pointer"
+          className="px-3 py-1.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700 flex items-center gap-2 transition-colors cursor-pointer"
         >
-          <span className="w-2 h-2 rounded-full bg-teal-400 animate-pulse"></span>
-          <span className="font-semibold text-white font-mono">{currentTemplate.sizeCode}</span>
-          <span className="text-stitch-muted text-[11px]">({currentTemplate.widthMm}×{currentTemplate.heightMm}mm • {currentTemplate.across}×{currentTemplate.rows})</span>
+          <span className="w-2 h-2 rounded-full bg-emerald-500" />
+          <span>{currentTemplate.sizeCode}</span>
+          <span className="text-slate-400 font-normal">({currentTemplate.widthMm}×{currentTemplate.heightMm}mm • {currentTemplate.across}×{currentTemplate.rows})</span>
         </button>
 
         {/* View Switcher Segmented Control */}
-        <div className="ml-3 flex items-center gap-1 bg-stitch-panel border border-stitch-border p-1 rounded-lg">
+        <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-bold">
           <button
             onClick={() => onChangeTab('editor')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'editor' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white'
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeTab === 'editor' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <LayoutGrid className="w-3.5 h-3.5" />
             <span>Single Label</span>
           </button>
           <button
             onClick={() => onChangeTab('preview')}
-            className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
-              activeTab === 'preview' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white'
+            className={`px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-all cursor-pointer ${
+              activeTab === 'preview' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            <LayoutGrid className="w-3.5 h-3.5" />
+            <Grid className="w-3.5 h-3.5" />
             <span>Full Sheet Preview</span>
+          </button>
+        </div>
+
+        {/* Action Tools */}
+        <div className="flex items-center gap-1 border-l border-slate-200 pl-3">
+          <button 
+            onClick={onOpenTemplates}
+            className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Grid className="w-4 h-4 text-slate-400" />
+            <span>Templates</span>
+          </button>
+
+          <button 
+            onClick={onOpenMailMerge}
+            className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+            <span>Mail Merge (CSV)</span>
+          </button>
+
+          <button 
+            onClick={onOpenAdmin}
+            className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Settings className="w-4 h-4 text-slate-400" />
+            <span>Template Admin</span>
+          </button>
+
+          <button 
+            onClick={onOpenCalibration}
+            className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Target className="w-4 h-4 text-amber-500" />
+            <span>Calibration</span>
+          </button>
+
+          <button 
+            onClick={onSaveProject}
+            className="px-2.5 py-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-50 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <Save className="w-4 h-4 text-blue-500" />
+            <span>Save</span>
           </button>
         </div>
       </div>
 
-      {/* Header Action Buttons & User Profile */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onOpenTemplates}
-          className="px-3 py-1.5 text-xs font-semibold text-stitch-text hover:text-white bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Select label sheet template"
-        >
-          <Grid className="w-3.5 h-3.5 text-blue-400" />
-          <span>Templates</span>
-        </button>
-
-        <button
-          onClick={onOpenMailMerge}
-          className="px-3 py-1.5 text-xs font-semibold text-stitch-text hover:text-white bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Upload CSV for mail merge"
-        >
-          <FileSpreadsheet className="w-3.5 h-3.5 text-teal-400" />
-          <span>Mail Merge (CSV)</span>
-        </button>
-
-        <button
-          onClick={onOpenAdmin}
-          className="px-3 py-1.5 text-xs font-semibold text-stitch-text hover:text-white bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Create/edit custom template specs"
-        >
-          <Settings className="w-3.5 h-3.5 text-slate-400" />
-          <span>Template Admin</span>
-        </button>
-
-        <button
-          onClick={onOpenCalibration}
-          className="px-3 py-1.5 text-xs font-semibold text-stitch-text hover:text-white bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Adjust printer offset calibration"
-        >
-          <Target className="w-3.5 h-3.5 text-amber-400" />
-          <span>Calibration</span>
-        </button>
-
-        <button
-          onClick={onSaveProject}
-          className="px-3 py-1.5 text-xs font-semibold text-stitch-text hover:text-white bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
-          title="Save project locally"
-        >
-          <Save className="w-3.5 h-3.5" />
-          <span>Save</span>
-        </button>
-
+      {/* 3. Right Action Group & User Profile Dropdown */}
+      <div className="flex items-center gap-3">
+        
+        {/* Primary Export Print Button */}
         <button
           onClick={onOpenPrintModal}
-          className="ml-1 px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-md shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+          className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/20 flex items-center gap-2 transition-all cursor-pointer transform hover:-translate-y-0.5"
         >
           <Printer className="w-4 h-4" />
           <span>PRINT / EXPORT PDF</span>
         </button>
 
-        {/* User Authentication Profile Badge */}
-        <div className="ml-2 relative">
-          {currentUser ? (
-            <div className="relative">
-              <button
-                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                className="flex items-center gap-2 p-1 pl-2 bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-full text-xs transition-all cursor-pointer"
-              >
-                {currentUser.avatarUrl ? (
-                  <img src={currentUser.avatarUrl} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center font-bold text-[10px] text-white">
-                    {currentUser.name.slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-                <span className="font-semibold text-white max-w-[100px] truncate">{currentUser.name}</span>
-                <ChevronDown className="w-3.5 h-3.5 text-stitch-muted mr-1" />
-              </button>
-
-              {/* User Dropdown Menu */}
-              {isUserMenuOpen && (
-                <div className="absolute right-0 top-10 w-56 bg-stitch-panel border border-stitch-border rounded-xl shadow-2xl p-3 z-50 space-y-2">
-                  <div className="pb-2 border-b border-stitch-border">
-                    <span className="font-bold text-xs text-white block">{currentUser.name}</span>
-                    <span className="text-[10px] font-mono text-stitch-muted block truncate">{currentUser.email}</span>
-                    <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-[9px] font-bold">
-                      <Shield className="w-3 h-3" />
-                      {currentUser.role}
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={() => {
-                      setIsUserMenuOpen(false);
-                      onLogout();
-                    }}
-                    className="w-full py-1.5 px-2 hover:bg-red-950/40 text-red-400 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer"
-                  >
-                    <LogOut className="w-3.5 h-3.5" />
-                    <span>Sign Out</span>
-                  </button>
+        {/* User Account Dropdown */}
+        {currentUser ? (
+          <div className="relative">
+            <button
+              onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              className="flex items-center gap-2 p-1 pl-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer"
+            >
+              {currentUser.avatarUrl ? (
+                <img src={currentUser.avatarUrl} alt="Avatar" className="w-7 h-7 rounded-lg object-cover" />
+              ) : (
+                <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-xs">
+                  {getInitials(currentUser.name, currentUser.email)}
                 </div>
               )}
-            </div>
-          ) : (
-            <button
-              onClick={onOpenLogin}
-              className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 hover:text-white rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Sign In</span>
+              <span className="text-xs font-bold text-slate-800 max-w-[100px] truncate hidden sm:block">
+                {displayName}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
             </button>
-          )}
-        </div>
+
+            {isUserMenuOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 text-xs">
+                <div className="px-4 py-2 border-b border-slate-100">
+                  <span className="font-bold text-slate-900 block truncate">{currentUser.name}</span>
+                  <span className="text-[11px] text-slate-400 block font-mono truncate">{currentUser.email}</span>
+                  <span className="inline-block mt-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded-md">
+                    {currentUser.role}
+                  </span>
+                </div>
+                <button
+                  onClick={() => { setIsUserMenuOpen(false); onLogout(); }}
+                  className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 flex items-center gap-2 font-bold transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <button
+            onClick={onOpenLogin}
+            className="px-3.5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>Sign In</span>
+          </button>
+        )}
       </div>
+
     </header>
   );
 };

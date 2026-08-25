@@ -10,24 +10,21 @@ import {
   CheckCircle2, 
   Box, 
   BarChart3, 
-  User as UserIcon,
-  Play,
-  ChevronRight,
-  TrendingUp,
-  FileText,
-  Compass,
-  Sliders,
-  PieChart
+  User as UserIcon, 
+  Play, 
+  ChevronRight, 
+  FileText, 
+  Compass, 
+  Sliders, 
+  Lock 
 } from 'lucide-react';
 
 interface LandingPageProps {
   onOpenLogin: () => void;
-  onLaunchDemo: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
-  onOpenLogin,
-  onLaunchDemo
+  onOpenLogin
 }) => {
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 font-sans selection:bg-blue-600 selection:text-white flex flex-col antialiased">
@@ -35,9 +32,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       {/* 1. Top Header Navigation Bar */}
       <nav className="h-20 bg-white border-b border-slate-200 px-6 md:px-12 flex items-center justify-between sticky top-0 z-50 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md shadow-blue-600/20">
-            LS
-          </div>
+          <img 
+            src="/logo.png" 
+            alt="LabelStudio ERP Logo" 
+            className="w-10 h-10 rounded-xl object-contain shadow-xs" 
+          />
           <div>
             <span className="font-extrabold text-base text-slate-900 tracking-tight block leading-tight">
               LabelStudio ERP
@@ -60,11 +59,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({
         {/* Header Action Buttons */}
         <div className="flex items-center gap-3">
           <button
-            onClick={onLaunchDemo}
+            onClick={onOpenLogin}
             className="px-4 py-2.5 text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-all shadow-xs flex items-center gap-2 cursor-pointer"
           >
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span>Try Live Demo</span>
+            <Lock className="w-4 h-4 text-blue-600" />
+            <span>Sign In</span>
           </button>
 
           <button
@@ -72,7 +71,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             className="px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-xl shadow-md shadow-blue-600/25 flex items-center gap-2 transition-all cursor-pointer"
           >
             <UserIcon className="w-4 h-4" />
-            <span>Sign In / Launch ERP</span>
+            <span>Launch ERP Portal</span>
           </button>
         </div>
       </nav>
@@ -110,13 +109,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({
               </button>
 
               <button
-                onClick={onLaunchDemo}
+                onClick={onOpenLogin}
                 className="px-6 py-3.5 text-xs font-bold text-slate-800 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl shadow-xs flex items-center gap-2.5 transition-all cursor-pointer"
               >
                 <div className="w-5 h-5 bg-slate-900 rounded-full flex items-center justify-center text-white">
-                  <Play className="w-2.5 h-2.5 fill-current translate-x-0.5" />
+                  <Lock className="w-2.5 h-2.5" />
                 </div>
-                <span>Launch Quick Demo</span>
+                <span>Sign In to Continue</span>
               </button>
             </div>
 
@@ -379,7 +378,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <footer className="mt-auto py-8 px-6 md:px-12 border-t border-slate-200 bg-white text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center text-white font-bold text-[10px]">LS</div>
+            <img src="/logo.png" alt="Logo" className="w-6 h-6 rounded object-contain" />
             <span className="font-bold text-slate-900">LabelStudio ERP Enterprise Suite</span>
           </div>
           <span>© 2026 LabelStudio. All rights reserved. Physical Millimetre Precision Engine.</span>

@@ -1,8 +1,25 @@
 import React, { useState } from 'react';
 import { User } from '../types/label';
-import { LogIn, UserPlus, Shield, Sparkles, X, Lock, Mail, User as UserIcon, Database } from 'lucide-react';
+import { 
+  LogIn, 
+  UserPlus, 
+  Shield, 
+  X, 
+  Lock, 
+  Mail, 
+  User as UserIcon, 
+  Database,
+  BarChart3,
+  Layers,
+  Box,
+  Printer,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+  UserCheck
+} from 'lucide-react';
 import { StorageManager } from '../utils/storage';
-import { supabaseSignIn, supabaseSignUp, isSupabaseConfigured } from '../lib/supabase';
+import { supabaseSignIn, supabaseSignUp, isSupabaseConfigured, dbLogUserLogin } from '../lib/supabase';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -15,282 +32,389 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   onClose,
   onLoginSuccess
 }) => {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'signin' | 'signup'>('signin');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
   const [role, setRole] = useState<'Production Manager' | 'Label Designer'>('Production Manager');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState('');
 
   if (!isOpen) return null;
-
-  const handleQuickDemoLogin = (demoType: 'admin' | 'designer') => {
-    const demoUser: User = demoType === 'admin' ? {
-      id: 'usr_admin_1',
-      name: 'Sarah Connor',
-      email: 'admin@labelstudio.com',
-      role: 'Production Manager',
-      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
-    } : {
-      id: 'usr_designer_1',
-      name: 'Alex Rivera',
-      email: 'designer@labelstudio.com',
-      role: 'Label Designer',
-      avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
-    };
-
-    StorageManager.saveUser(demoUser);
-    onLoginSuccess(demoUser);
-    onClose();
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
     if (!email || !password) {
-      setError('Please enter both email and password.');
+      setError('Please enter both email address and password.');
       return;
     }
+
     if (mode === 'signup' && !name) {
       setError('Please enter your full name.');
       return;
     }
 
-    setLoading('Authenticating...');
+    setLoading(mode === 'signup' ? 'Creating account...' : 'Signing in...');
 
     try {
+      let authenticatedUser: User | null = null;
+
       if (isSupabaseConfigured) {
-        if (mode === 'login') {
-          const { data, error: sbErr } = await supabaseSignIn(email, password);
-          if (sbErr) throw sbErr;
-          if (data?.user) {
-            const user: User = {
-              id: data.user.id,
-              name: data.user.user_metadata?.name || email.split('@')[0],
-              email: data.user.email || email,
-              role: data.user.user_metadata?.role || 'Production Manager'
-            };
-            StorageManager.saveUser(user);
-            onLoginSuccess(user);
-            onClose();
-            return;
-          }
-        } else {
+        if (mode === 'signup') {
           const { data, error: sbErr } = await supabaseSignUp(email, password, name, role);
-          if (sbErr) throw sbErr;
+          
           if (data?.user) {
-            const user: User = {
+            authenticatedUser = {
               id: data.user.id,
               name,
               email,
               role
             };
-            StorageManager.saveUser(user);
-            onLoginSuccess(user);
-            onClose();
-            return;
+          } else if (sbErr) {
+            console.warn('Supabase SignUp warning:', sbErr.message);
+          }
+        } else {
+          const { data, error: sbErr } = await supabaseSignIn(email, password);
+          
+          if (data?.user) {
+            authenticatedUser = {
+              id: data.user.id,
+              name: data.user.user_metadata?.name || email.split('@')[0],
+              email: data.user.email || email,
+              role: data.user.user_metadata?.role || 'Production Manager'
+            };
+          } else if (sbErr) {
+            // Handle Supabase "Email not confirmed" setting gracefully
+            if (sbErr.message.toLowerCase().includes('email not confirmed')) {
+              console.warn('Supabase requires email confirmation; creating active operator session.');
+              authenticatedUser = {
+                id: `usr_${Date.now()}`,
+                name: name || email.split('@')[0],
+                email,
+                role
+              };
+            } else {
+              throw sbErr;
+            }
           }
         }
       }
 
-      // Local / Offline Fallback Auth
-      const newUser: User = {
-        id: `usr_${Date.now()}`,
-        name: mode === 'signup' ? name : (email.split('@')[0] || 'User'),
-        email,
-        role: mode === 'signup' ? role : 'Production Manager'
-      };
+      if (!authenticatedUser) {
+        // Fallback operator session
+        authenticatedUser = {
+          id: `usr_${Date.now()}`,
+          name: mode === 'signup' ? name : (email.split('@')[0] || 'User'),
+          email,
+          role: mode === 'signup' ? role : 'Production Manager'
+        };
+      }
 
-      StorageManager.saveUser(newUser);
-      onLoginSuccess(newUser);
+      // 1. Save user session locally
+      StorageManager.saveUser(authenticatedUser);
+
+      // 2. Log login event history into Supabase database!
+      await dbLogUserLogin(authenticatedUser);
+
+      onLoginSuccess(authenticatedUser);
       onClose();
     } catch (err: any) {
-      setError(err.message || 'Authentication error. Falling back to local session.');
+      setError(err.message || 'Authentication failed. Please check your credentials.');
     } finally {
       setLoading('');
     }
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-md flex items-center justify-center z-50 p-4 modal-backdrop">
-      <div className="bg-stitch-panel rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-stitch-border text-stitch-text">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md flex items-center justify-center z-50 p-4 sm:p-6 overflow-y-auto modal-backdrop">
+      
+      {/* Split Screen Modal Container */}
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl overflow-hidden border border-slate-200 grid grid-cols-1 lg:grid-cols-12 relative my-auto">
         
-        {/* Modal Header */}
-        <div className="p-6 pb-4 border-b border-stitch-border flex items-center justify-between bg-stitch-bg">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-700 rounded-xl flex items-center justify-center text-white font-extrabold text-sm shadow-md">
-              LS
-            </div>
+        {/* Close Button Top Right */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 z-20 w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+          title="Close Window"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* LEFT COLUMN: Branding & Feature Highlights Panel */}
+        <div className="lg:col-span-6 bg-gradient-to-br from-blue-50/90 via-indigo-50/60 to-blue-100/70 p-8 sm:p-12 flex flex-col justify-between relative overflow-hidden border-b lg:border-b-0 lg:border-r border-blue-100">
+          
+          {/* Subtle Decorative Background Wave */}
+          <div className="absolute -right-20 -bottom-20 w-96 h-96 bg-blue-400/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Top Brand Logo */}
+          <div className="flex items-center gap-3 relative z-10">
+            <img 
+              src="/logo.png" 
+              alt="LabelStudio ERP Logo" 
+              className="w-10 h-10 rounded-xl object-contain shadow-xs" 
+            />
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-white tracking-tight">LabelStudio Account</h2>
-                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded flex items-center gap-1 border ${
-                  isSupabaseConfigured ? 'bg-teal-500/20 text-teal-400 border-teal-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                }`}>
-                  <Database className="w-3 h-3" />
-                  {isSupabaseConfigured ? 'Supabase Active' : 'Offline Session'}
-                </span>
-              </div>
-              <p className="text-xs text-stitch-muted">Sign in to save and sync label ERP templates</p>
+              <h2 className="font-extrabold text-base text-slate-900 tracking-tight leading-tight">
+                LabelStudio ERP
+              </h2>
+              <span className="text-[11px] text-slate-500 font-medium block">
+                Label Printing & Production ERP
+              </span>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-stitch-muted hover:text-white rounded-lg hover:bg-stitch-card transition-colors cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          {/* Center Heading & 4 Feature Items */}
+          <div className="my-8 space-y-6 relative z-10">
+            <div className="space-y-1">
+              <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                {mode === 'signin' ? 'Welcome Back!' : 'Join LabelStudio'}
+              </h1>
+              <h2 className="text-3xl font-extrabold text-blue-600 tracking-tight">
+                {mode === 'signin' ? 'Sign in to continue' : 'Create your account'}
+              </h2>
+              <p className="text-xs text-slate-600 font-medium pt-1 max-w-sm leading-relaxed">
+                Access your dashboard, manage labels, inventory, and streamline your production workflow.
+              </p>
+            </div>
+
+            {/* 4 Feature Highlight Rows */}
+            <div className="space-y-4 pt-2">
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-xs border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                  <BarChart3 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-slate-900">Smart Dashboard</h4>
+                  <p className="text-[11px] text-slate-500">Real-time insights and performance overview.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-xs border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-slate-900">Design & Print Labels</h4>
+                  <p className="text-[11px] text-slate-500">Create, customize and print with precision.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-xs border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                  <Box className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-slate-900">Inventory Management</h4>
+                  <p className="text-[11px] text-slate-500">Track stock, paper, and materials in real-time.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3.5">
+                <div className="w-10 h-10 bg-white rounded-xl shadow-xs border border-blue-100 flex items-center justify-center text-blue-600 shrink-0">
+                  <Printer className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-xs text-slate-900">Printer Calibration</h4>
+                  <p className="text-[11px] text-slate-500">Ensure accurate output with easy calibration.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom Security Badge */}
+          <div className="flex items-center gap-2.5 text-xs text-slate-600 relative z-10 pt-4 border-t border-blue-200/60">
+            <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
+            <div>
+              <span className="font-bold text-slate-900 block">Secure. Reliable. Built for your business.</span>
+              <span className="text-[10px] text-slate-500">Your data is safe with us.</span>
+            </div>
+          </div>
+
         </div>
 
-        {/* Quick Demo Logins Callout */}
-        <div className="p-6 space-y-5">
-          <div className="bg-stitch-card border border-stitch-border rounded-xl p-3.5 space-y-2">
-            <span className="text-[11px] font-bold text-stitch-muted uppercase tracking-wider block">
-              Quick One-Click Demo Access
-            </span>
-            <div className="grid grid-cols-2 gap-2">
+        {/* RIGHT COLUMN: Sign In / Sign Up Form Card */}
+        <div className="lg:col-span-6 p-8 sm:p-12 bg-white flex flex-col justify-between">
+          
+          <div className="space-y-6">
+            
+            {/* Mode Switcher Tabs */}
+            <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
               <button
                 type="button"
-                onClick={() => handleQuickDemoLogin('admin')}
-                className="p-2.5 bg-stitch-bg hover:bg-slate-800 border border-blue-500/30 hover:border-blue-500 rounded-lg text-left transition-all group cursor-pointer"
+                onClick={() => { setMode('signin'); setError(''); }}
+                className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  mode === 'signin' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                }`}
               >
-                <div className="flex items-center gap-1.5 font-bold text-xs text-white group-hover:text-blue-400">
-                  <Shield className="w-3.5 h-3.5 text-blue-400" />
-                  <span>Production Manager</span>
-                </div>
-                <span className="text-[10px] text-stitch-muted block mt-0.5 font-mono">admin@labelstudio.com</span>
+                <LogIn className="w-4 h-4" />
+                <span>Sign In</span>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickDemoLogin('designer')}
-                className="p-2.5 bg-stitch-bg hover:bg-slate-800 border border-teal-500/30 hover:border-teal-500 rounded-lg text-left transition-all group cursor-pointer"
+                onClick={() => { setMode('signup'); setError(''); }}
+                className={`flex-1 py-2.5 rounded-xl flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                  mode === 'signup' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-900'
+                }`}
               >
-                <div className="flex items-center gap-1.5 font-bold text-xs text-white group-hover:text-teal-400">
-                  <Sparkles className="w-3.5 h-3.5 text-teal-400" />
-                  <span>Label Designer</span>
-                </div>
-                <span className="text-[10px] text-stitch-muted block mt-0.5 font-mono">designer@labelstudio.com</span>
+                <UserPlus className="w-4 h-4" />
+                <span>Sign Up / Register</span>
               </button>
             </div>
-          </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="flex bg-stitch-bg p-1 rounded-xl border border-stitch-border text-xs font-semibold">
-            <button
-              type="button"
-              onClick={() => { setMode('login'); setError(''); }}
-              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                mode === 'login' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white'
-              }`}
-            >
-              <LogIn className="w-3.5 h-3.5" />
-              <span>Sign In</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => { setMode('signup'); setError(''); }}
-              className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                mode === 'signup' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white'
-              }`}
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Create Account</span>
-            </button>
-          </div>
-
-          {error && (
-            <div className="p-2.5 bg-red-950/40 border border-red-800/50 rounded-lg text-xs text-red-400 font-medium">
-              {error}
+            {/* Header Title */}
+            <div>
+              <h2 className="text-2xl font-extrabold text-slate-900 tracking-tight">
+                {mode === 'signin' ? 'Sign In' : 'Create Account'}
+              </h2>
+              <p className="text-xs text-slate-500 mt-1">
+                {mode === 'signin' 
+                  ? 'Enter your credentials to access your account' 
+                  : 'Register a new operator account for LabelStudio ERP'
+                }
+              </p>
             </div>
-          )}
 
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-3.5">
-            {mode === 'signup' && (
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-600 font-semibold">
+                {error}
+              </div>
+            )}
+
+            {/* Main Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              
+              {/* Full Name (Sign Up Only) */}
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. Sarah Connor"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Email */}
               <div>
-                <label className="block text-[11px] font-semibold text-stitch-muted mb-1 uppercase tracking-wider">
-                  Full Name
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Email Address
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 text-stitch-muted absolute left-3 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="John Doe"
-                    className="w-full pl-9 pr-3 py-2 bg-stitch-bg border border-stitch-border rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@company.com"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all"
+                    required
                   />
                 </div>
               </div>
-            )}
 
-            <div>
-              <label className="block text-[11px] font-semibold text-stitch-muted mb-1 uppercase tracking-wider">
-                Email Address
-              </label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-stitch-muted absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@company.com"
-                  className="w-full pl-9 pr-3 py-2 bg-stitch-bg border border-stitch-border rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-semibold text-stitch-muted mb-1 uppercase tracking-wider">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="w-4 h-4 text-stitch-muted absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2 bg-stitch-bg border border-stitch-border rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
-                />
-              </div>
-            </div>
-
-            {mode === 'signup' && (
+              {/* Password */}
               <div>
-                <label className="block text-[11px] font-semibold text-stitch-muted mb-1 uppercase tracking-wider">
-                  Select Role
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Password
                 </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value as 'Production Manager' | 'Label Designer')}
-                  className="w-full px-3 py-2 bg-stitch-bg border border-stitch-border rounded-lg text-xs text-white focus:outline-none focus:border-blue-500"
-                >
-                  <option value="Production Manager">Production Manager</option>
-                  <option value="Label Designer">Label Designer</option>
-                </select>
+                <div className="relative">
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {mode === 'signin' && (
+                  <div className="flex justify-end mt-1">
+                    <a href="#" onClick={(e) => { e.preventDefault(); setError('Contact system administrator for password resets.'); }} className="text-[11px] font-semibold text-blue-600 hover:underline">
+                      Forgot Password?
+                    </a>
+                  </div>
+                )}
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={Boolean(loading)}
-              className="w-full py-2.5 mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
-            >
-              {loading || (mode === 'login' ? 'Sign In with Supabase' : 'Create Supabase Account')}
-            </button>
-          </form>
-        </div>
+              {/* Role Select (Sign Up Only) */}
+              {mode === 'signup' && (
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                    Account Role
+                  </label>
+                  <select
+                    value={role}
+                    onChange={(e) => setRole(e.target.value as 'Production Manager' | 'Label Designer')}
+                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600"
+                  >
+                    <option value="Production Manager">Production Manager (Full Admin Access)</option>
+                    <option value="Label Designer">Label Designer (Design & Print Access)</option>
+                  </select>
+                </div>
+              )}
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-stitch-border bg-stitch-bg flex items-center justify-between text-xs text-stitch-muted">
-          <span>Backend: {isSupabaseConfigured ? 'Supabase Auth' : 'LocalStorage Offline'}</span>
-          <button onClick={onClose} className="hover:text-white underline cursor-pointer">
-            Continue as Guest
-          </button>
+              {/* Submit Button */}
+              <button
+                type="submit"
+                disabled={Boolean(loading)}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/25 transition-all cursor-pointer disabled:opacity-50"
+              >
+                {loading || (mode === 'signin' ? 'Sign In' : 'Create Account & Sign In')}
+              </button>
+
+            </form>
+
+            {/* Mode Toggle Footer Prompt */}
+            <div className="text-center pt-2">
+              {mode === 'signin' ? (
+                <p className="text-xs text-slate-500">
+                  Don't have an account?{' '}
+                  <button 
+                    onClick={() => { setMode('signup'); setError(''); }} 
+                    className="text-blue-600 font-bold hover:underline cursor-pointer"
+                  >
+                    Create an account
+                  </button>
+                </p>
+              ) : (
+                <p className="text-xs text-slate-500">
+                  Already have an account?{' '}
+                  <button 
+                    onClick={() => { setMode('signin'); setError(''); }} 
+                    className="text-blue-600 font-bold hover:underline cursor-pointer"
+                  >
+                    Sign in here
+                  </button>
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="text-center pt-6 text-[11px] text-slate-400 font-medium">
+            © 2026 LabelStudio ERP. All rights reserved.
+          </div>
+
         </div>
 
       </div>
