@@ -1,4 +1,21 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Type, 
+  Image as ImageIcon, 
+  Barcode, 
+  QrCode, 
+  Magnet, 
+  Undo, 
+  Redo,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignStartVertical,
+  AlignCenterVertical,
+  AlignEndVertical,
+  Copy,
+  Trash2
+} from 'lucide-react';
 import { LabelTemplate, LabelElement, ElementType } from '../types/label';
 import { mmToPx, pxToMm, snapToGrid } from '../utils/mmToPx';
 import JsBarcode from 'jsbarcode';
@@ -19,9 +36,9 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
   selectedElementId,
   onSelectElement
 }) => {
-  const [zoom, setZoom] = useState<number>(2.5); // Screen zoom scale for editing
+  const [zoom, setZoom] = useState<number>(2.5);
   const [gridSnap, setGridSnap] = useState<boolean>(true);
-  const [gridSize, setGridSize] = useState<number>(1); // mm
+  const [gridSize, setGridSize] = useState<number>(1);
   const [history, setHistory] = useState<LabelElement[][]>([elements]);
   const [historyIdx, setHistoryIdx] = useState<number>(0);
 
@@ -33,7 +50,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
 
   const selectedElement = elements.find(el => el.id === selectedElementId);
 
-  // History Helper
   const pushHistory = (newEls: LabelElement[]) => {
     const updated = history.slice(0, historyIdx + 1);
     updated.push(JSON.parse(JSON.stringify(newEls)));
@@ -59,7 +75,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
     }
   };
 
-  // Add Element
   const addElement = (type: ElementType) => {
     const id = `el_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     let newEl: LabelElement = {
@@ -77,7 +92,7 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
         ...newEl,
         content: 'Sample Text',
         fontSize: 10,
-        fontFamily: 'Inter',
+        fontFamily: 'Arial',
         fontWeight: 'bold',
         textAlign: 'center',
         color: '#000000',
@@ -120,7 +135,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
     onSelectElement(id);
   };
 
-  // Alignment
   const alignElement = (alignment: 'left' | 'centerH' | 'right' | 'top' | 'centerV' | 'bottom') => {
     if (!selectedElement) return;
     const updated = elements.map(el => {
@@ -142,7 +156,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
     pushHistory(updated);
   };
 
-  // Duplicate / Delete
   const duplicateElement = () => {
     if (!selectedElement) return;
     const clone = JSON.parse(JSON.stringify(selectedElement));
@@ -161,7 +174,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
     onSelectElement(null);
   };
 
-  // Mouse Handlers for Drag & Resize
   const handleMouseDown = (e: React.MouseEvent, id: string, handle?: string) => {
     e.stopPropagation();
     onSelectElement(id);
@@ -193,7 +205,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
         const copy = { ...item };
 
         if (!handle) {
-          // Dragging Position
           let nx = elementStartGeo.current.x + dxMm;
           let ny = elementStartGeo.current.y + dyMm;
           if (gridSnap) {
@@ -203,7 +214,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
           copy.x = Math.max(0, Math.min(template.widthMm - copy.width, nx));
           copy.y = Math.max(0, Math.min(template.heightMm - copy.height, ny));
         } else {
-          // Resizing
           let nw = elementStartGeo.current.w;
           let nh = elementStartGeo.current.h;
           let nx = elementStartGeo.current.x;
@@ -259,21 +269,21 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
   const labelH = mmToPx(template.heightMm, zoom);
 
   return (
-    <div className="flex flex-col h-full bg-[#f1f5f9]">
-      {/* Stitch Canvas Toolbar Header */}
-      <div className="h-12 bg-surface-container-lowest border-b border-outline-variant px-4 flex items-center justify-between shadow-xs shrink-0 z-30">
-        {/* Add Element Buttons */}
+    <div className="flex flex-col h-full bg-stitch-bg select-none">
+      {/* Editor Tooling Header */}
+      <div className="h-11 bg-stitch-panel border-b border-stitch-border px-4 flex items-center justify-between text-stitch-text">
+        {/* Add Content Palette */}
         <div className="flex items-center gap-1.5">
           <button
             onClick={() => addElement('text')}
-            className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+            className="px-2.5 py-1 bg-stitch-card hover:bg-slate-700 border border-stitch-border rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer text-white"
           >
-            <span className="material-symbols-outlined text-[18px]">text_fields</span>
+            <Type className="w-3.5 h-3.5 text-blue-400" />
             <span>Text</span>
           </button>
 
-          <label className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer">
-            <span className="material-symbols-outlined text-[18px]">image</span>
+          <label className="px-2.5 py-1 bg-stitch-card hover:bg-slate-700 border border-stitch-border rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer text-white">
+            <ImageIcon className="w-3.5 h-3.5 text-teal-400" />
             <span>Image</span>
             <input
               type="file"
@@ -307,137 +317,137 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
 
           <button
             onClick={() => addElement('barcode')}
-            className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+            className="px-2.5 py-1 bg-stitch-card hover:bg-slate-700 border border-stitch-border rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer text-white"
           >
-            <span className="material-symbols-outlined text-[18px]">qr_code_2</span>
+            <Barcode className="w-3.5 h-3.5 text-purple-400" />
             <span>Barcode</span>
           </button>
 
           <button
             onClick={() => addElement('qrcode')}
-            className="px-3 py-1.5 bg-surface-container-low hover:bg-primary-container hover:text-on-primary border border-outline-variant rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+            className="px-2.5 py-1 bg-stitch-card hover:bg-slate-700 border border-stitch-border rounded-md text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer text-white"
           >
-            <span className="material-symbols-outlined text-[18px]">qr_code</span>
+            <QrCode className="w-3.5 h-3.5 text-amber-400" />
             <span>QR Code</span>
           </button>
         </div>
 
-        {/* Alignment & Action Tools */}
+        {/* Precision Alignment Bar */}
         <div className="flex items-center gap-1">
           <button
             onClick={() => alignElement('left')}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Align Left"
           >
-            <span className="material-symbols-outlined text-[18px]">format_align_left</span>
+            <AlignLeft className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => alignElement('centerH')}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Center Horizontally"
           >
-            <span className="material-symbols-outlined text-[18px]">format_align_center</span>
+            <AlignCenter className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => alignElement('right')}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Align Right"
           >
-            <span className="material-symbols-outlined text-[18px]">format_align_right</span>
+            <AlignRight className="w-3.5 h-3.5" />
           </button>
-          <div className="w-px h-4 bg-outline-variant mx-1" />
+          <div className="w-px h-3.5 bg-stitch-border mx-1" />
           <button
             onClick={() => alignElement('top')}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Align Top"
           >
-            <span className="material-symbols-outlined text-[18px]">vertical_align_top</span>
+            <AlignStartVertical className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => alignElement('centerV')}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Center Vertically"
           >
-            <span className="material-symbols-outlined text-[18px]">vertical_align_center</span>
+            <AlignCenterVertical className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={() => alignElement('bottom')}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Align Bottom"
           >
-            <span className="material-symbols-outlined text-[18px]">vertical_align_bottom</span>
+            <AlignEndVertical className="w-3.5 h-3.5" />
           </button>
-          <div className="w-px h-4 bg-outline-variant mx-1" />
+          <div className="w-px h-3.5 bg-stitch-border mx-1" />
           <button
             onClick={duplicateElement}
             disabled={!selectedElement}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Duplicate"
           >
-            <span className="material-symbols-outlined text-[18px]">content_copy</span>
+            <Copy className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={deleteElement}
             disabled={!selectedElement}
-            className="p-1.5 text-error hover:bg-error-container hover:text-on-error-container rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-red-400 hover:text-red-300 rounded disabled:opacity-25 cursor-pointer"
             title="Delete"
           >
-            <span className="material-symbols-outlined text-[18px]">delete</span>
+            <Trash2 className="w-3.5 h-3.5" />
           </button>
         </div>
 
-        {/* Grid Snap & Zoom Controls */}
+        {/* Snap & Zoom Controls */}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setGridSnap(!gridSnap)}
-            className={`px-2.5 py-1 border rounded-lg text-xs font-mono font-medium flex items-center gap-1 transition-all cursor-pointer ${
-              gridSnap ? 'bg-primary-container text-on-primary border-primary-container' : 'bg-surface border-outline-variant text-on-surface-variant'
+            className={`p-1.5 border rounded-md text-xs font-semibold flex items-center gap-1 transition-colors ${
+              gridSnap ? 'bg-blue-600/20 border-blue-500 text-blue-400' : 'bg-stitch-card border-stitch-border text-stitch-muted'
             }`}
-            title="Snap to Grid"
+            title="Snap to grid"
           >
-            <span className="material-symbols-outlined text-[16px]">grid_4x4</span>
+            <Magnet className="w-3.5 h-3.5" />
             <span>Snap</span>
           </button>
 
           <select
             value={gridSize}
             onChange={(e) => setGridSize(parseFloat(e.target.value))}
-            className="px-2 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-mono"
+            className="px-2 py-1 bg-stitch-card border border-stitch-border rounded-md text-xs text-stitch-text font-mono"
           >
             <option value="0.5">0.5 mm</option>
             <option value="1">1.0 mm</option>
             <option value="2">2.0 mm</option>
           </select>
 
-          <div className="w-px h-4 bg-outline-variant mx-1" />
+          <div className="w-px h-3.5 bg-stitch-border mx-1" />
 
           <button
             onClick={handleUndo}
             disabled={historyIdx <= 0}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Undo"
           >
-            <span className="material-symbols-outlined text-[18px]">undo</span>
+            <Undo className="w-3.5 h-3.5" />
           </button>
           <button
             onClick={handleRedo}
             disabled={historyIdx >= history.length - 1}
-            className="p-1.5 text-on-surface-variant hover:bg-surface-container-high rounded-md disabled:opacity-30 transition-colors"
+            className="p-1.5 text-stitch-muted hover:text-white rounded disabled:opacity-25 cursor-pointer"
             title="Redo"
           >
-            <span className="material-symbols-outlined text-[18px]">redo</span>
+            <Redo className="w-3.5 h-3.5" />
           </button>
 
           <select
             value={zoom}
             onChange={(e) => setZoom(parseFloat(e.target.value))}
-            className="px-2 py-1 bg-surface border border-outline-variant rounded-lg text-xs font-mono font-medium text-on-surface"
+            className="px-2 py-1 bg-stitch-card border border-stitch-border rounded-md text-xs font-mono font-bold text-blue-400"
           >
             <option value="1.5">150%</option>
             <option value="2.0">200%</option>
@@ -447,31 +457,20 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
         </div>
       </div>
 
-      {/* Stitch Millimeter Viewport Canvas with Rulers */}
+      {/* Editor Viewport Canvas (Stitch Light Workspace with Grid Overlay) */}
       <div 
         ref={containerRef}
         onClick={() => onSelectElement(null)}
-        className="flex-1 overflow-auto p-12 relative flex items-center justify-center select-none"
+        className="flex-1 overflow-auto p-12 flex items-center justify-center relative bg-[#f8fafc] grid-bg-overlay select-none"
       >
-        {/* Horizontal Top Ruler */}
-        <div className="absolute top-0 left-8 right-0 h-6 ruler-x bg-surface-container-lowest border-b border-outline-variant z-10 pointer-events-none">
-          <span className="absolute left-0 top-1 font-mono text-[10px] text-outline ml-1">0mm</span>
-          <span className="absolute left-[70mm] top-1 font-mono text-[10px] text-outline ml-1">{template.widthMm}mm</span>
-        </div>
-
-        {/* Vertical Left Ruler */}
-        <div className="absolute left-0 top-8 bottom-0 w-6 ruler-y bg-surface-container-lowest border-r border-outline-variant z-10 pointer-events-none">
-          <span className="absolute top-0 left-1 font-mono text-[10px] text-outline mt-1 origin-top-left -rotate-90">0mm</span>
-          <span className="absolute top-[37mm] left-1 font-mono text-[10px] text-outline mt-1 origin-top-left -rotate-90">{template.heightMm}mm</span>
-        </div>
-
-        {/* Interactive Label Container */}
         <div 
-          className="bg-surface-container-lowest shadow-[0_4px_6px_-1px_rgb(0_0_0/0.1)] relative canvas-grid border border-outline-variant overflow-hidden transition-all rounded-xs"
+          className="bg-white a4-paper-shadow relative transition-all"
           style={{ width: `${labelW}px`, height: `${labelH}px` }}
         >
-          {/* Printable Safety Margin Boundary Line */}
-          <div className="absolute inset-[2mm] border border-dashed border-error/30 pointer-events-none z-10" />
+          {/* Label Metric Indicator */}
+          <div className="absolute top-1 left-2 text-[9px] font-mono font-bold text-slate-400 pointer-events-none">
+            {template.widthMm} × {template.heightMm} mm
+          </div>
 
           {/* Render Elements */}
           {elements.map(el => {
@@ -486,8 +485,8 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
                 key={el.id}
                 onMouseDown={(e) => handleMouseDown(e, el.id)}
                 onClick={(e) => e.stopPropagation()}
-                className={`absolute box-border cursor-move group transition-shadow ${
-                  isSelected ? 'outline-2 outline-primary shadow-md' : 'hover:outline-1 hover:outline-primary/50'
+                className={`absolute box-border cursor-move group ${
+                  isSelected ? 'outline-2 outline-blue-600 ring-2 ring-blue-500/30' : 'hover:outline-1 hover:outline-blue-400'
                 }`}
                 style={{
                   left: `${xPx}px`,
@@ -500,24 +499,28 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
                 {/* Element Content */}
                 <RenderElementInner el={el} zoom={zoom} />
 
-                {/* Corner Resize Handles */}
+                {/* Resize Handles */}
                 {isSelected && (
                   <>
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'nw')}
-                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nwse-resize z-20"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nwse-resize z-20"
                     />
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'ne')}
-                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nesw-resize z-20"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nesw-resize z-20"
                     />
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'sw')}
-                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nesw-resize z-20"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nesw-resize z-20"
                     />
                     <div
                       onMouseDown={(e) => handleMouseDown(e, el.id, 'se')}
-                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-primary border-2 border-white rounded-xs cursor-nwse-resize z-20"
+                      onClick={(e) => e.stopPropagation()}
+                      className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-blue-600 border border-white rounded-full cursor-nwse-resize z-20"
                     />
                   </>
                 )}
@@ -530,7 +533,6 @@ export const SingleLabelEditor: React.FC<SingleLabelEditorProps> = ({
   );
 };
 
-// Render Element Inner Content
 const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, zoom }) => {
   const barcodeRef = useRef<SVGSVGElement>(null);
   const qrRef = useRef<HTMLDivElement>(null);
@@ -561,7 +563,7 @@ const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, 
       <div 
         className="w-full h-full flex items-center overflow-hidden leading-tight whitespace-pre-wrap break-words"
         style={{
-          fontFamily: el.fontFamily || 'Inter',
+          fontFamily: el.fontFamily || 'Arial',
           fontSize: `${fontSizePx}px`,
           fontWeight: el.fontWeight || 'normal',
           fontStyle: el.fontStyle || 'normal',
@@ -578,7 +580,7 @@ const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, 
     return el.src ? (
       <img src={el.src} alt="element" className="w-full h-full object-contain pointer-events-none" />
     ) : (
-      <div className="w-full h-full bg-surface-container-low border border-dashed border-outline-variant flex items-center justify-center text-xs text-on-surface-variant font-mono">
+      <div className="w-full h-full bg-slate-100 border border-dashed border-slate-300 flex items-center justify-center text-xs text-slate-400">
         Image Placeholder
       </div>
     );

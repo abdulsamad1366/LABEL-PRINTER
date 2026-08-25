@@ -163,6 +163,8 @@ export function App() {
       <Header
         currentTemplate={activeTemplate}
         projectName={projectName}
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
         onOpenTemplates={() => setIsTemplatePickerOpen(true)}
         onOpenMailMerge={() => setIsMailMergeOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
@@ -230,27 +232,8 @@ export function App() {
           </div>
         </aside>
 
-        {/* Center Workspace & Floating View Toggle */}
-        <main className="flex-1 bg-[#f1f5f9] flex flex-col relative overflow-hidden">
-          {/* Floating View Switcher Pill Pill */}
-          <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-surface-container-lowest rounded-full shadow-md border border-outline-variant p-1 flex gap-1 z-30">
-            <button
-              onClick={() => setActiveTab('editor')}
-              className={`px-4 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
-                activeTab === 'editor' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
-              }`}
-            >
-              Single Label
-            </button>
-            <button
-              onClick={() => setActiveTab('preview')}
-              className={`px-4 py-1.5 rounded-full font-mono text-xs transition-all cursor-pointer ${
-                activeTab === 'preview' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
-              }`}
-            >
-              Full Sheet Preview
-            </button>
-          </div>
+        {/* Center Workspace Area */}
+        <main className="flex-1 bg-stitch-bg flex flex-col relative overflow-hidden">
 
           {/* Active View Container */}
           <div className="flex-1 overflow-hidden">
@@ -299,11 +282,6 @@ export function App() {
               setSelectedElementId(clone.id);
             }
           }}
-          csvData={csvData}
-          calibration={calibration}
-          onUpdateCalibration={handleSaveCalibration}
-          onOpenPrintModal={() => setIsPrintModalOpen(true)}
-          onSaveProject={handleSaveProject}
         />
 
       </div>

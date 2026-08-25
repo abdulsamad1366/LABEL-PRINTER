@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Printer, FileDown, Target, X, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Printer, FileDown, Target, X, AlertTriangle } from 'lucide-react';
 import { LabelTemplate, LabelElement, CalibrationSettings, DataRow } from '../types/label';
 import { generatePDF, generateTestAlignmentPDF } from '../utils/pdfGenerator';
+import { preparePrintDOM } from '../utils/printDOM';
 
 interface PrintExportModalProps {
   isOpen: boolean;
@@ -47,13 +48,26 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
     doc.save(`alignment_test_${template.sizeCode}.pdf`);
   };
 
-  const handleDirectPrint = () => {
-    window.print();
+  const handleDirectPrint = async () => {
+    setIsGenerating(true);
+    try {
+      await preparePrintDOM(template, elements, {
+        calibration,
+        showBorders,
+        csvData
+      });
+      window.print();
+    } catch (e) {
+      console.error('Direct Print Error:', e);
+      alert('Error preparing print document.');
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 modal-backdrop">
+      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden border border-slate-200 modal-container">
         
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
@@ -117,10 +131,11 @@ export const PrintExportModal: React.FC<PrintExportModalProps> = ({
 
             <button
               onClick={handleDirectPrint}
-              className="py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
+              disabled={isGenerating}
+              className="py-3 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
             >
               <Printer className="w-4 h-4 text-blue-400" />
-              <span>Print Directly (Browser)</span>
+              <span>{isGenerating ? 'Preparing...' : 'Print Directly (Browser)'}</span>
             </button>
           </div>
 
