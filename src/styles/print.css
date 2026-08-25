@@ -1,0 +1,52 @@
+/* 
+ * Dedicated Physical Print Stylesheet for LabelStudio
+ * Enforces @page { size: A4 portrait; margin: 0; } in exact physical millimetres (mm)
+ */
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 0;
+  }
+
+  html, body {
+    width: 210mm;
+    height: 297mm;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #ffffff !important;
+    overflow: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire SaaS application UI */
+  header,
+  nav,
+  aside,
+  .no-print,
+  .modal-backdrop {
+    display: none !important;
+  }
+
+  /* Display only print sheet container */
+  #print-root {
+    display: block !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 210mm;
+    height: 297mm;
+    margin: 0;
+    padding: 0;
+  }
+
+  .print-page {
+    width: 210mm;
+    height: 297mm;
+    position: relative;
+    page-break-after: always;
+    overflow: hidden;
+    background: #ffffff;
+  }
+}
