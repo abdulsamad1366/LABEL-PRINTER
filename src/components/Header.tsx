@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   Printer, 
   FileSpreadsheet, 
@@ -7,35 +7,48 @@ import {
   Grid, 
   Target,
   Layers,
-  LayoutGrid
+  LayoutGrid,
+  User as UserIcon,
+  LogOut,
+  LogIn,
+  ChevronDown,
+  Shield
 } from 'lucide-react';
-import { LabelTemplate } from '../types/label';
+import { LabelTemplate, User } from '../types/label';
 
 interface HeaderProps {
   currentTemplate: LabelTemplate;
   projectName: string;
-  activeTab?: 'editor' | 'preview';
-  onChangeTab?: (tab: 'editor' | 'preview') => void;
+  activeTab: 'editor' | 'preview';
+  currentUser: User | null;
+  onChangeTab: (tab: 'editor' | 'preview') => void;
   onOpenTemplates: () => void;
   onOpenMailMerge: () => void;
   onOpenAdmin: () => void;
   onOpenCalibration: () => void;
   onSaveProject: () => void;
   onOpenPrintModal: () => void;
+  onOpenLogin: () => void;
+  onLogout: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentTemplate,
   projectName,
   activeTab,
+  currentUser,
   onChangeTab,
   onOpenTemplates,
   onOpenMailMerge,
   onOpenAdmin,
   onOpenCalibration,
   onSaveProject,
-  onOpenPrintModal
+  onOpenPrintModal,
+  onOpenLogin,
+  onLogout
 }) => {
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+
   return (
     <header className="h-14 bg-stitch-bg border-b border-stitch-border px-4 flex items-center justify-between text-stitch-text z-40 select-none">
       {/* Brand & Project Info */}
@@ -66,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({
         {/* View Switcher Segmented Control */}
         <div className="ml-3 flex items-center gap-1 bg-stitch-panel border border-stitch-border p-1 rounded-lg">
           <button
-            onClick={() => onChangeTab?.('editor')}
+            onClick={() => onChangeTab('editor')}
             className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'editor' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white'
             }`}
@@ -75,7 +88,7 @@ export const Header: React.FC<HeaderProps> = ({
             <span>Single Label</span>
           </button>
           <button
-            onClick={() => onChangeTab?.('preview')}
+            onClick={() => onChangeTab('preview')}
             className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'preview' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white'
             }`}
@@ -86,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Header Action Buttons */}
+      {/* Header Action Buttons & User Profile */}
       <div className="flex items-center gap-2">
         <button
           onClick={onOpenTemplates}
@@ -135,11 +148,66 @@ export const Header: React.FC<HeaderProps> = ({
 
         <button
           onClick={onOpenPrintModal}
-          className="ml-2 px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-md shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
+          className="ml-1 px-4 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 active:bg-blue-700 rounded-md shadow-md flex items-center gap-1.5 transition-all cursor-pointer"
         >
           <Printer className="w-4 h-4" />
           <span>PRINT / EXPORT PDF</span>
         </button>
+
+        {/* User Authentication Profile Badge */}
+        <div className="ml-2 relative">
+          {currentUser ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center gap-2 p-1 pl-2 bg-stitch-panel hover:bg-stitch-card border border-stitch-border rounded-full text-xs transition-all cursor-pointer"
+              >
+                {currentUser.avatarUrl ? (
+                  <img src={currentUser.avatarUrl} alt="avatar" className="w-6 h-6 rounded-full object-cover" />
+                ) : (
+                  <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center font-bold text-[10px] text-white">
+                    {currentUser.name.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <span className="font-semibold text-white max-w-[100px] truncate">{currentUser.name}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-stitch-muted mr-1" />
+              </button>
+
+              {/* User Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 top-10 w-56 bg-stitch-panel border border-stitch-border rounded-xl shadow-2xl p-3 z-50 space-y-2">
+                  <div className="pb-2 border-b border-stitch-border">
+                    <span className="font-bold text-xs text-white block">{currentUser.name}</span>
+                    <span className="text-[10px] font-mono text-stitch-muted block truncate">{currentUser.email}</span>
+                    <span className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-[9px] font-bold">
+                      <Shield className="w-3 h-3" />
+                      {currentUser.role}
+                    </span>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      onLogout();
+                    }}
+                    className="w-full py-1.5 px-2 hover:bg-red-950/40 text-red-400 rounded-lg text-xs font-semibold flex items-center gap-2 transition-colors cursor-pointer"
+                  >
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={onOpenLogin}
+              className="px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-400 hover:text-white rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
+        </div>
       </div>
     </header>
   );
