@@ -83,3 +83,11 @@ export interface CalibrationSettings {
   horizontalOffset: number; // mm (+/- shift)
   verticalOffset: number;   // mm (+/- shift)
 }
+
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  role: 'Production Manager' | 'Label Designer' | 'Guest';
+  avatarUrl?: string;
+}
