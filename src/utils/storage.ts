@@ -1,14 +1,33 @@
-import { LabelTemplate, Project, CalibrationSettings } from '../types/label';
+import { LabelTemplate, Project, CalibrationSettings, User } from '../types/label';
 import { SEED_TEMPLATES } from '../data/seedPresets';
 
 const KEYS = {
   PROJECTS: 'labelstudio_projects',
   TEMPLATES: 'labelstudio_custom_templates',
   CALIBRATION: 'labelstudio_calibration',
-  CURRENT_PROJECT_ID: 'labelstudio_current_project_id'
+  CURRENT_PROJECT_ID: 'labelstudio_current_project_id',
+  USER: 'labelstudio_user'
 };
 
 export class StorageManager {
+  // --- User Auth Session ---
+  static getUser(): User | null {
+    try {
+      const str = localStorage.getItem(KEYS.USER);
+      return str ? JSON.parse(str) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static saveUser(user: User): void {
+    localStorage.setItem(KEYS.USER, JSON.stringify(user));
+  }
+
+  static logoutUser(): void {
+    localStorage.removeItem(KEYS.USER);
+  }
+
   // --- Templates ---
   static getTemplates(): LabelTemplate[] {
     try {
@@ -63,10 +82,9 @@ export class StorageManager {
     return project;
   }
 
-  static deleteProject(id: string): void {
-    let projects = this.getProjects();
-    projects = projects.filter(p => p.id !== id);
-    localStorage.setItem(KEYS.PROJECTS, JSON.stringify(projects));
+  static getProject(id: string): Project | null {
+    const projects = this.getProjects();
+    return projects.find(p => p.id === id) || null;
   }
 
   // --- Calibration ---
