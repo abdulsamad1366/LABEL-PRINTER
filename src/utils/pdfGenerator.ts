@@ -12,6 +12,7 @@ export async function generatePDF(
     csvData?: DataRow[];
     calibration?: CalibrationSettings;
     showBorders?: boolean;
+    selectedGridIndices?: number[];
   } = {}
 ): Promise<jsPDF> {
   const doc = new jsPDF({
@@ -41,6 +42,10 @@ export async function generatePDF(
         const globalIndex = page * labelsPerPage + gridIndex;
 
         if (globalIndex >= totalItems && options.csvData) continue;
+
+        // Check if this grid position is selected for printing
+        const isCellSelected = !options.selectedGridIndices || options.selectedGridIndices.includes(gridIndex);
+        if (!isCellSelected) continue;
 
         const labelX = marginLeftMm + c * (widthMm + colGapMm) + hOffset;
         const labelY = marginTopMm + r * (heightMm + rowGapMm) + vOffset;
@@ -157,7 +162,7 @@ async function renderPdfElement(doc: jsPDF, el: LabelElement, labelX: number, la
     if (align === 'left') textX = x;
     if (align === 'right') textX = x + el.width;
 
-    // Approximate text Y baseline offset
+    // Text Y baseline offset
     const ptToMm = 0.3527777778;
     const lineSpacingMm = fontPt * ptToMm * (el.lineHeight || 1.1);
     
@@ -168,7 +173,7 @@ async function renderPdfElement(doc: jsPDF, el: LabelElement, labelX: number, la
     try {
       doc.addImage(el.src, 'PNG', x, y, el.width, el.height);
     } catch {
-      // Ignore image rendering errors if corrupt format
+      // Ignore image rendering errors
     }
   } else if (el.type === 'barcode' && el.value) {
     try {

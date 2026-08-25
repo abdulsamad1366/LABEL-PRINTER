@@ -11,6 +11,7 @@ export async function preparePrintDOM(
     csvData?: DataRow[];
     calibration?: CalibrationSettings;
     showBorders?: boolean;
+    selectedGridIndices?: number[];
   } = {}
 ) {
   const printRoot = document.getElementById('print-root');
@@ -45,6 +46,9 @@ export async function preparePrintDOM(
 
         if (globalIndex >= totalItems && options.csvData) continue;
 
+        // Check if this grid position is selected for printing
+        const isCellSelected = !options.selectedGridIndices || options.selectedGridIndices.includes(gridIndex);
+        
         const xMm = marginLeftMm + c * (widthMm + colGapMm);
         const yMm = marginTopMm + r * (heightMm + rowGapMm);
         const borderStyle = options.showBorders ? 'border: 0.2mm solid #cbd5e1;' : 'border: none;';
@@ -58,15 +62,18 @@ export async function preparePrintDOM(
           ${borderStyle}
         ">`;
 
-        let currentElements = elements;
-        if (options.csvData && options.csvData[globalIndex]) {
-          currentElements = applyRowDataToElements(elements, options.csvData[globalIndex]);
-        } else if (options.individualOverrides && options.individualOverrides[gridIndex]) {
-          currentElements = options.individualOverrides[gridIndex];
-        }
+        // Only render element contents if cell is selected
+        if (isCellSelected) {
+          let currentElements = elements;
+          if (options.csvData && options.csvData[globalIndex]) {
+            currentElements = applyRowDataToElements(elements, options.csvData[globalIndex]);
+          } else if (options.individualOverrides && options.individualOverrides[gridIndex]) {
+            currentElements = options.individualOverrides[gridIndex];
+          }
 
-        for (const el of currentElements) {
-          html += renderElementHTML(el);
+          for (const el of currentElements) {
+            html += renderElementHTML(el);
+          }
         }
 
         html += `</div>`;
@@ -114,6 +121,7 @@ function renderElementHTML(el: LabelElement): string {
 
   if (el.type === 'text' && el.content) {
     const fontPt = el.fontSize || 10;
+    const fontMm = (fontPt * 0.3527777778).toFixed(3);
     return `<div class="print-element" style="
       left: ${el.x}mm;
       top: ${el.y}mm;
@@ -121,7 +129,7 @@ function renderElementHTML(el: LabelElement): string {
       height: ${el.height}mm;
       ${rotation}
       font-family: ${el.fontFamily || 'Arial'}, sans-serif;
-      font-size: ${fontPt}pt;
+      font-size: ${fontMm}mm;
       font-weight: ${el.fontWeight || 'normal'};
       font-style: ${el.fontStyle || 'normal'};
       text-align: ${el.textAlign || 'center'};

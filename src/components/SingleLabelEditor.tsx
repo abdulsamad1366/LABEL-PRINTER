@@ -558,7 +558,7 @@ const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, 
   }, [el, zoom]);
 
   if (el.type === 'text') {
-    const fontSizePx = (el.fontSize || 10) * 1.333 * (zoom / 2);
+    const fontSizePx = (el.fontSize || 10) * 1.333333333 * zoom;
     return (
       <div 
         className="w-full h-full flex items-center overflow-hidden leading-tight whitespace-pre-wrap break-words"
