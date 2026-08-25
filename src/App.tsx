@@ -1,113 +1,138 @@
 import React, { useState, useEffect } from 'react';
+import { LabelTemplate, LabelElement, CalibrationSettings, Project, DataRow, User } from './types/label';
+import { StorageManager } from './utils/storage';
 import { Header } from './components/Header';
-import { TemplatePicker } from './components/TemplatePicker';
 import { SingleLabelEditor } from './components/SingleLabelEditor';
 import { SheetPreview } from './components/SheetPreview';
 import { ElementInspector } from './components/ElementInspector';
+import { TemplatePicker } from './components/TemplatePicker';
 import { BulkMailMerge } from './components/BulkMailMerge';
-import { PrintExportModal } from './components/PrintExportModal';
 import { TemplateAdminModal } from './components/TemplateAdminModal';
 import { CalibrationModal } from './components/CalibrationModal';
+import { PrintExportModal } from './components/PrintExportModal';
+import { LoginModal } from './components/LoginModal';
+import { LandingPage } from './components/LandingPage';
+import { ERPDashboard } from './components/ERPDashboard';
+import { InventoryManager } from './components/InventoryManager';
+import { PrintHistoryLogs } from './components/PrintHistoryLogs';
 
-import { LabelTemplate, LabelElement, CalibrationSettings, DataRow, Project } from './types/label';
-import { StorageManager } from './utils/storage';
-import { SEED_TEMPLATES } from './data/seedPresets';
+export type ERPModule = 'dashboard' | 'studio' | 'inventory' | 'audit';
 
-const STARTER_ELEMENTS: LabelElement[] = [
-  {
-    id: 'el_title',
-    type: 'text',
-    content: 'NAFI LOCK INDUSTRIES',
-    x: 3,
-    y: 2,
-    width: 57.5,
-    height: 5,
-    fontSize: 10,
-    fontFamily: 'Inter',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#0f172a'
-  },
-  {
-    id: 'el_sub',
-    type: 'text',
-    content: 'HEAVY DUTY PADLOCK 70 MM',
-    x: 3,
-    y: 7.5,
-    width: 57.5,
-    height: 4.5,
-    fontSize: 8.5,
-    fontFamily: 'Inter',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#004ac6'
-  },
-  {
-    id: 'el_price',
-    type: 'text',
-    content: 'MRP ₹{{price}}  |  GST {{gst}}',
-    x: 3,
-    y: 13,
-    width: 57.5,
-    height: 4,
-    fontSize: 8,
-    fontFamily: 'Inter',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#047857'
-  },
-  {
-    id: 'el_barcode',
-    type: 'barcode',
-    value: 'ABC-70',
-    barcodeType: 'CODE128',
-    x: 3,
-    y: 18,
-    width: 38,
-    height: 12,
-    displayValue: true
-  },
-  {
-    id: 'el_qr',
-    type: 'qrcode',
-    value: 'https://nafilocks.com/item/ABC-70',
-    x: 44,
-    y: 18,
-    width: 14,
-    height: 14
-  },
-  {
-    id: 'el_code',
-    type: 'text',
-    content: 'CODE: {{sku}}',
-    x: 3,
-    y: 33,
-    width: 57.5,
-    height: 3.5,
-    fontSize: 7.5,
-    fontFamily: 'JetBrains Mono',
-    fontWeight: 'normal',
-    textAlign: 'center',
-    color: '#334155'
-  }
-];
-
-export function App() {
+function App() {
   const [templates, setTemplates] = useState<LabelTemplate[]>([]);
-  const [activeTemplate, setActiveTemplate] = useState<LabelTemplate>(SEED_TEMPLATES[12]); // Default 12A (24 labels)
-  const [elements, setElements] = useState<LabelElement[]>(STARTER_ELEMENTS);
+  const [activeTemplate, setActiveTemplate] = useState<LabelTemplate>({
+    id: 'template_18',
+    sizeCode: '18',
+    widthMm: 63.5,
+    heightMm: 46.6,
+    across: 3,
+    rows: 6,
+    marginTopMm: 8.7,
+    marginLeftMm: 9.75,
+    colGapMm: 0,
+    rowGapMm: 0,
+    sheetWidthMm: 210,
+    sheetHeightMm: 297,
+    finish: 'Uncoated 70',
+    color: 'Default',
+    verified: true
+  });
+
+  const [elements, setElements] = useState<LabelElement[]>([
+    {
+      id: 'el_header',
+      type: 'text',
+      x: 3,
+      y: 2,
+      width: 57.5,
+      height: 5,
+      content: 'NAFI LOCK INDUSTRIES',
+      fontSize: 10,
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#0f172a'
+    },
+    {
+      id: 'el_sub',
+      type: 'text',
+      x: 3,
+      y: 7.5,
+      width: 57.5,
+      height: 4,
+      content: '90 MM HEAVY DUTY DISC LOCK',
+      fontSize: 7,
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#1d4ed8'
+    },
+    {
+      id: 'el_price',
+      type: 'text',
+      x: 3,
+      y: 12.5,
+      width: 57.5,
+      height: 4,
+      content: 'MRP ₹{{price}} | GST {{gst}}',
+      fontSize: 7.5,
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#047857'
+    },
+    {
+      id: 'el_barcode',
+      type: 'barcode',
+      x: 6,
+      y: 18,
+      width: 28,
+      height: 18,
+      value: 'ABC-70',
+      barcodeType: 'CODE128',
+      displayValue: true
+    },
+    {
+      id: 'el_qr',
+      type: 'qrcode',
+      x: 38,
+      y: 18,
+      width: 18,
+      height: 18,
+      value: 'https://example.com/product/pdl-90'
+    },
+    {
+      id: 'el_sku',
+      type: 'text',
+      x: 3,
+      y: 38,
+      width: 57.5,
+      height: 3.5,
+      content: 'CODE: {{sku}}',
+      fontSize: 6.5,
+      fontFamily: 'JetBrains Mono',
+      fontWeight: 'normal',
+      textAlign: 'center',
+      color: '#475569'
+    }
+  ]);
+
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [applyToAll, setApplyToAll] = useState<boolean>(true);
   const [individualOverrides, setIndividualOverrides] = useState<Record<number, LabelElement[]>>({});
   const [csvData, setCsvData] = useState<DataRow[] | undefined>([
-    { price: '250', gst: '18%', sku: 'PL-40' },
-    { price: '300', gst: '18%', sku: 'PL-50' },
-    { price: '350', gst: '18%', sku: 'PL-60' }
+    { price: '1299', gst: '18%', sku: 'PDL-90' },
+    { price: '1499', gst: '18%', sku: 'PDL-100' },
+    { price: '1799', gst: '18%', sku: 'PDL-120' }
   ]);
   const [calibration, setCalibration] = useState<CalibrationSettings>({ horizontalOffset: 0, verticalOffset: 0 });
   const [projectName, setProjectName] = useState<string>('Hardware Product Label');
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
   const [selectedLabelIndex, setSelectedLabelIndex] = useState<number>(0);
+
+  // ERP State
+  const [activeERPModule, setActiveERPModule] = useState<ERPModule>('dashboard');
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   // Modals
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
@@ -115,13 +140,29 @@ export function App() {
   const [isAdminOpen, setIsAdminOpen] = useState(false);
   const [isCalibrationOpen, setIsCalibrationOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   useEffect(() => {
     const loadedTemplates = StorageManager.getTemplates();
     setTemplates(loadedTemplates);
     const loadedCalibration = StorageManager.getCalibration();
     setCalibration(loadedCalibration);
+    const loadedUser = StorageManager.getUser();
+    setCurrentUser(loadedUser);
   }, []);
+
+  const handleLaunchDemo = () => {
+    const demoUser: User = {
+      id: 'usr_demo_admin',
+      name: 'Sarah Connor',
+      email: 'admin@labelstudio.com',
+      role: 'Production Manager',
+      avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&auto=format&fit=crop&q=80'
+    };
+    StorageManager.saveUser(demoUser);
+    setCurrentUser(demoUser);
+    setActiveERPModule('studio');
+  };
 
   const handleSaveProject = () => {
     const proj: Project = {
@@ -150,6 +191,11 @@ export function App() {
     StorageManager.saveCalibration(settings);
   };
 
+  const handleLogout = () => {
+    StorageManager.logoutUser();
+    setCurrentUser(null);
+  };
+
   const selectedElement = elements.find(el => el.id === selectedElementId) || null;
 
   const handleUpdateSelectedElement = (props: Partial<LabelElement>) => {
@@ -157,132 +203,207 @@ export function App() {
     setElements(prev => prev.map(el => el.id === selectedElementId ? { ...el, ...props } : el));
   };
 
+  // 1. IF USER IS NOT LOGGED IN -> SHOW LANDING PAGE FIRST!
+  if (!currentUser) {
+    return (
+      <>
+        <LandingPage
+          onOpenLogin={() => setIsLoginOpen(true)}
+          onLaunchDemo={handleLaunchDemo}
+        />
+        <LoginModal
+          isOpen={isLoginOpen}
+          onClose={() => setIsLoginOpen(false)}
+          onLoginSuccess={(user) => {
+            setCurrentUser(user);
+            setActiveERPModule('studio');
+          }}
+        />
+      </>
+    );
+  }
+
+  // 2. IF LOGGED IN -> RENDER FULL ERP WORKSPACE!
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-background text-on-surface">
+    <div className="flex flex-col h-screen overflow-hidden bg-background text-on-surface select-none">
       {/* Stitch Navbar Header */}
       <Header
         currentTemplate={activeTemplate}
         projectName={projectName}
         activeTab={activeTab}
-        onChangeTab={setActiveTab}
+        currentUser={currentUser}
+        onChangeTab={(tab) => {
+          setActiveTab(tab);
+          setActiveERPModule('studio');
+        }}
         onOpenTemplates={() => setIsTemplatePickerOpen(true)}
         onOpenMailMerge={() => setIsMailMergeOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenCalibration={() => setIsCalibrationOpen(true)}
         onSaveProject={handleSaveProject}
         onOpenPrintModal={() => setIsPrintModalOpen(true)}
+        onOpenLogin={() => setIsLoginOpen(true)}
+        onLogout={handleLogout}
       />
 
-      {/* Main Workspace Body */}
+      {/* Main ERP Workspace Body */}
       <div className="flex flex-1 overflow-hidden">
         
-        {/* Stitch Left SideNav Sidebar */}
-        <aside className="w-sidebar_width bg-surface-container-lowest border-r border-outline-variant flex flex-col z-40 shrink-0 h-full overflow-y-auto shadow-xs">
-          <div className="p-4 border-b border-outline-variant">
-            <h2 className="font-semibold text-sm text-on-surface mb-0.5">Label Designer</h2>
-            <p className="font-mono text-xs text-on-surface-variant">{activeTemplate.sizeCode} ({activeTemplate.widthMm}×{activeTemplate.heightMm}mm)</p>
+        {/* ERP Module Navigation Sidebar */}
+        <aside className="w-56 bg-stitch-panel border-r border-stitch-border flex flex-col z-40 shrink-0 h-full overflow-y-auto text-stitch-text">
+          <div className="p-4 border-b border-stitch-border">
+            <span className="text-[10px] font-bold text-stitch-muted uppercase tracking-wider block">ERP Navigation</span>
+            <div className="mt-1 flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-white">Production Suite</span>
+              <span className="text-[10px] text-teal-400 font-mono">v2.0</span>
+            </div>
           </div>
-          
-          <nav className="flex-1 p-3 flex flex-col gap-1.5">
+
+          <nav className="p-2 space-y-1 flex-1">
             <button 
-              onClick={() => setActiveTab('editor')}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-mono text-xs transition-all w-full text-left cursor-pointer ${
-                activeTab === 'editor' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
+              onClick={() => setActiveERPModule('dashboard')}
+              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
+                activeERPModule === 'dashboard' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px]">category</span>
-              <span>Design Canvas</span>
+              <span className="material-symbols-outlined text-[18px]">space_dashboard</span>
+              <span>ERP Dashboard</span>
             </button>
 
             <button 
-              onClick={() => setActiveTab('preview')}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg font-mono text-xs transition-all w-full text-left cursor-pointer ${
-                activeTab === 'preview' ? 'bg-primary-container text-on-primary font-bold shadow-xs' : 'text-on-surface-variant hover:bg-surface-container-low'
+              onClick={() => setActiveERPModule('studio')}
+              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
+                activeERPModule === 'studio' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
               }`}
             >
-              <span className="material-symbols-outlined text-[20px]">grid_view</span>
-              <span>Full Sheet Preview</span>
+              <span className="material-symbols-outlined text-[18px]">design_services</span>
+              <span>Label Design Studio</span>
             </button>
+
+            <button 
+              onClick={() => setActiveERPModule('inventory')}
+              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
+                activeERPModule === 'inventory' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">inventory_2</span>
+              <span>Paper & Stock ERP</span>
+            </button>
+
+            <button 
+              onClick={() => setActiveERPModule('audit')}
+              className={`w-full px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2.5 transition-all cursor-pointer ${
+                activeERPModule === 'audit' ? 'bg-blue-600 text-white shadow-xs' : 'text-stitch-muted hover:text-white hover:bg-stitch-card'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[18px]">history</span>
+              <span>Print Audit Logs</span>
+            </button>
+
+            <div className="pt-4 pb-2">
+              <span className="text-[10px] font-bold text-stitch-muted uppercase tracking-wider block px-3">Production Quick Tools</span>
+            </div>
 
             <button 
               onClick={() => setIsTemplatePickerOpen(true)}
-              className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-all font-mono text-xs rounded-lg w-full text-left cursor-pointer"
+              className="w-full px-3 py-2 text-stitch-muted hover:text-white hover:bg-stitch-card rounded-lg text-xs font-medium flex items-center gap-2.5 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[20px]">style</span>
-              <span>Presets & Specs</span>
+              <span className="material-symbols-outlined text-[18px]">square_foot</span>
+              <span>Presets & Specs ({templates.length})</span>
             </button>
 
             <button 
               onClick={() => setIsMailMergeOpen(true)}
-              className="flex items-center gap-3 px-3 py-2 text-on-surface-variant hover:bg-surface-container-low transition-all font-mono text-xs rounded-lg w-full text-left cursor-pointer"
+              className="w-full px-3 py-2 text-stitch-muted hover:text-white hover:bg-stitch-card rounded-lg text-xs font-medium flex items-center gap-2.5 transition-all cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[20px]">table_view</span>
-              <span>Data Source ({csvData ? csvData.length : 0})</span>
+              <span className="material-symbols-outlined text-[18px]">database</span>
+              <span>CSV Mail Merge ({csvData ? csvData.length : 0})</span>
             </button>
           </nav>
 
-          <div className="p-4 border-t border-outline-variant">
+          <div className="p-3 border-t border-stitch-border">
             <button 
               onClick={() => setIsTemplatePickerOpen(true)}
-              className="w-full py-2 border border-primary text-primary rounded-lg font-medium text-xs hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              className="w-full py-2 bg-stitch-card border border-stitch-border text-blue-400 hover:text-white rounded-lg font-semibold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-[18px]">widgets</span>
-              <span>Change Template</span>
+              <span className="material-symbols-outlined text-[16px]">widgets</span>
+              <span>Change Active Specs</span>
             </button>
           </div>
         </aside>
 
-        {/* Center Workspace Area */}
+        {/* Module Content Container */}
         <main className="flex-1 bg-stitch-bg flex flex-col relative overflow-hidden">
+          {activeERPModule === 'dashboard' && (
+            <ERPDashboard
+              currentUser={currentUser}
+              activeTemplate={activeTemplate}
+              onNavigateToStudio={() => setActiveERPModule('studio')}
+              onNavigateToInventory={() => setActiveERPModule('inventory')}
+              onOpenMailMerge={() => setIsMailMergeOpen(true)}
+              onOpenCalibration={() => setIsCalibrationOpen(true)}
+            />
+          )}
 
-          {/* Active View Container */}
-          <div className="flex-1 overflow-hidden">
-            {activeTab === 'editor' ? (
-              <SingleLabelEditor
-                template={activeTemplate}
-                elements={elements}
-                onChangeElements={setElements}
-                selectedElementId={selectedElementId}
-                onSelectElement={setSelectedElementId}
-              />
-            ) : (
-              <SheetPreview
-                template={activeTemplate}
-                elements={elements}
-                applyToAll={applyToAll}
-                individualOverrides={individualOverrides}
-                csvData={csvData}
-                selectedLabelIndex={selectedLabelIndex}
-                onSelectLabelIndex={(idx) => {
-                  setSelectedLabelIndex(idx);
-                  setActiveTab('editor');
+          {activeERPModule === 'inventory' && (
+            <InventoryManager />
+          )}
+
+          {activeERPModule === 'audit' && (
+            <PrintHistoryLogs />
+          )}
+
+          {activeERPModule === 'studio' && (
+            <div className="flex flex-1 h-full overflow-hidden">
+              <div className="flex-1 overflow-hidden">
+                {activeTab === 'editor' ? (
+                  <SingleLabelEditor
+                    template={activeTemplate}
+                    elements={elements}
+                    onChangeElements={setElements}
+                    selectedElementId={selectedElementId}
+                    onSelectElement={setSelectedElementId}
+                  />
+                ) : (
+                  <SheetPreview
+                    template={activeTemplate}
+                    elements={elements}
+                    applyToAll={applyToAll}
+                    individualOverrides={individualOverrides}
+                    csvData={csvData}
+                    selectedLabelIndex={selectedLabelIndex}
+                    onSelectLabelIndex={(idx) => {
+                      setSelectedLabelIndex(idx);
+                      setActiveTab('editor');
+                    }}
+                  />
+                )}
+              </div>
+
+              {/* Stitch Right Side Inspector */}
+              <ElementInspector
+                selectedElement={selectedElement}
+                onUpdateElement={handleUpdateSelectedElement}
+                onDeleteElement={() => {
+                  if (selectedElementId) {
+                    setElements(prev => prev.filter(el => el.id !== selectedElementId));
+                    setSelectedElementId(null);
+                  }
+                }}
+                onDuplicateElement={() => {
+                  if (selectedElement) {
+                    const clone = JSON.parse(JSON.stringify(selectedElement));
+                    clone.id = `el_${Date.now()}`;
+                    clone.x += 2;
+                    clone.y += 2;
+                    setElements(prev => [...prev, clone]);
+                    setSelectedElementId(clone.id);
+                  }
                 }}
               />
-            )}
-          </div>
+            </div>
+          )}
         </main>
-
-        {/* Stitch Right Side Inspector */}
-        <ElementInspector
-          selectedElement={selectedElement}
-          onUpdateElement={handleUpdateSelectedElement}
-          onDeleteElement={() => {
-            if (selectedElementId) {
-              setElements(prev => prev.filter(el => el.id !== selectedElementId));
-              setSelectedElementId(null);
-            }
-          }}
-          onDuplicateElement={() => {
-            if (selectedElement) {
-              const clone = JSON.parse(JSON.stringify(selectedElement));
-              clone.id = `el_${Date.now()}`;
-              clone.x += 2;
-              clone.y += 2;
-              setElements(prev => [...prev, clone]);
-              setSelectedElementId(clone.id);
-            }
-          }}
-        />
 
       </div>
 
@@ -325,6 +446,15 @@ export function App() {
         elements={elements}
         calibration={calibration}
         csvData={csvData}
+      />
+
+      <LoginModal
+        isOpen={isLoginOpen}
+        onClose={() => setIsLoginOpen(false)}
+        onLoginSuccess={(user) => {
+          setCurrentUser(user);
+          setActiveERPModule('studio');
+        }}
       />
 
     </div>

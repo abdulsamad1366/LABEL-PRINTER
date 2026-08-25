@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { User } from '../types/label';
-import { LogIn, UserPlus, Shield, Sparkles, X, Lock, Mail, User as UserIcon } from 'lucide-react';
+import { LogIn, UserPlus, Shield, Sparkles, X, Lock, Mail, User as UserIcon, Database } from 'lucide-react';
 import { StorageManager } from '../utils/storage';
+import { supabaseSignIn, supabaseSignUp, isSupabaseConfigured } from '../lib/supabase';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [name, setName] = useState('');
   const [role, setRole] = useState<'Production Manager' | 'Label Designer'>('Production Manager');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState('');
 
   if (!isOpen) return null;
 
@@ -43,8 +45,10 @@ export const LoginModal: React.FC<LoginModalProps> = ({
     onClose();
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+
     if (!email || !password) {
       setError('Please enter both email and password.');
       return;
@@ -54,16 +58,59 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    const newUser: User = {
-      id: `usr_${Date.now()}`,
-      name: mode === 'signup' ? name : (email.split('@')[0] || 'User'),
-      email,
-      role: mode === 'signup' ? role : 'Production Manager'
-    };
+    setLoading('Authenticating...');
 
-    StorageManager.saveUser(newUser);
-    onLoginSuccess(newUser);
-    onClose();
+    try {
+      if (isSupabaseConfigured) {
+        if (mode === 'login') {
+          const { data, error: sbErr } = await supabaseSignIn(email, password);
+          if (sbErr) throw sbErr;
+          if (data?.user) {
+            const user: User = {
+              id: data.user.id,
+              name: data.user.user_metadata?.name || email.split('@')[0],
+              email: data.user.email || email,
+              role: data.user.user_metadata?.role || 'Production Manager'
+            };
+            StorageManager.saveUser(user);
+            onLoginSuccess(user);
+            onClose();
+            return;
+          }
+        } else {
+          const { data, error: sbErr } = await supabaseSignUp(email, password, name, role);
+          if (sbErr) throw sbErr;
+          if (data?.user) {
+            const user: User = {
+              id: data.user.id,
+              name,
+              email,
+              role
+            };
+            StorageManager.saveUser(user);
+            onLoginSuccess(user);
+            onClose();
+            return;
+          }
+        }
+      }
+
+      // Local / Offline Fallback Auth
+      const newUser: User = {
+        id: `usr_${Date.now()}`,
+        name: mode === 'signup' ? name : (email.split('@')[0] || 'User'),
+        email,
+        role: mode === 'signup' ? role : 'Production Manager'
+      };
+
+      StorageManager.saveUser(newUser);
+      onLoginSuccess(newUser);
+      onClose();
+    } catch (err: any) {
+      setError(err.message || 'Authentication error. Falling back to local session.');
+    } finally {
+      setLoading('');
+    }
   };
 
   return (
@@ -77,8 +124,16 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               LS
             </div>
             <div>
-              <h2 className="text-base font-bold text-white tracking-tight">LabelStudio Account</h2>
-              <p className="text-xs text-stitch-muted">Sign in to save and manage label templates</p>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-white tracking-tight">LabelStudio Account</h2>
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded flex items-center gap-1 border ${
+                  isSupabaseConfigured ? 'bg-teal-500/20 text-teal-400 border-teal-500/30' : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                }`}>
+                  <Database className="w-3 h-3" />
+                  {isSupabaseConfigured ? 'Supabase Active' : 'Offline Session'}
+                </span>
+              </div>
+              <p className="text-xs text-stitch-muted">Sign in to save and sync label ERP templates</p>
             </div>
           </div>
           <button
@@ -222,16 +277,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({
 
             <button
               type="submit"
-              className="w-full py-2.5 mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+              disabled={Boolean(loading)}
+              className="w-full py-2.5 mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
             >
-              {mode === 'login' ? 'Sign In to Account' : 'Create LabelStudio Account'}
+              {loading || (mode === 'login' ? 'Sign In with Supabase' : 'Create Supabase Account')}
             </button>
           </form>
         </div>
 
         {/* Footer */}
         <div className="px-6 py-3 border-t border-stitch-border bg-stitch-bg flex items-center justify-between text-xs text-stitch-muted">
-          <span>Protected Session (LocalStorage)</span>
+          <span>Backend: {isSupabaseConfigured ? 'Supabase Auth' : 'LocalStorage Offline'}</span>
           <button onClick={onClose} className="hover:text-white underline cursor-pointer">
             Continue as Guest
           </button>
