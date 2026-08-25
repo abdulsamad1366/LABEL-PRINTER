@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LabelPrint Studio - A4 Adhesive Label Designer</title>
+  
+  <!-- CSS Stylesheets -->
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
+</head>
+<body>
+
+  <!-- Top App Header Bar -->
+  <header class="app-header">
+    <div class="brand-section">
+      <div class="app-logo">LP</div>
+      <h1 class="app-title">LabelPrint Studio</h1>
+      <div class="template-badge">
+        <span class="template-badge-dot"></span>
+        <span id="current-template-name">Hardware Product Label</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn btn-outline" id="btn-header-chart" style="background:#fef3c7; color:#92400e; border-color:#fde68a;">📐 SIZE CHART</button>
+      <button class="btn btn-outline" id="btn-header-templates">📁 Templates</button>
+      <button class="btn btn-outline" id="btn-header-csv">📊 Bulk CSV</button>
+      <button class="btn btn-outline" id="btn-header-calibration">🎯 Calibration</button>
+      <button class="btn btn-secondary" id="btn-header-save">💾 Save Template</button>
+      <button class="btn btn-primary" id="btn-header-print">🖨️ PRINT LABELS</button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <div class="app-workspace">
+
+    <!-- Left Sidebar Panel -->
+    <aside class="sidebar-panel">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active" data-tab="tab-sheet">Sheet & Presets</button>
+        <button class="tab-btn" data-tab="tab-elements">Add Content</button>
+      </div>
+
+      <!-- Tab 1: Sheet Configuration & Presets -->
+      <div class="tab-content active" id="tab-sheet">
+        
+        <!-- Layout Validation Alert -->
+        <div id="layout-validation-alert" class="alert-banner alert-warning" style="display:none;"></div>
+
+        <!-- Quick Visual Size Chart Trigger Banner -->
+        <div class="panel-section">
+          <button class="btn btn-outline" id="btn-open-size-chart-sidebar" style="width:100%; padding:10px; background:#fffbeb; border-color:#fcd34d; color:#92400e; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <span style="font-size:16px;">📐</span>
+            <span style="font-weight:700;">Open Visual Size Chart (From Packaging)</span>
+          </button>
+        </div>
+
+        <div class="panel-section">
+          <div class="section-title">Label Presets List</div>
+          <div class="preset-list" id="presets-list-container">
+            <!-- Dynamic presets rendered via presets.js -->
+          </div>
+        </div>
+
+        <div class="panel-section">
+          <div class="section-title">Sheet Settings (A4 / Custom)</div>
+
+          <div class="form-group">
+            <label>Paper Size</label>
+            <select class="input-control" id="select-paper-size">
+              <option value="A4">A4 (210 × 297 mm)</option>
+              <option value="Custom">Custom Paper Size</option>
+            </select>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group unit-addon">
+              <label>Paper Width</label>
+              <input type="number" step="0.1" class="input-control" id="input-paper-width" value="210">
+              <span class="unit-text">mm</span>
+            </div>
+            <div class="form-group unit-addon">
+              <label>Paper Height</label>
+              <input type="number" step="0.1" class="input-control" id="input-paper-height" value="297">
+              <span class="unit-text">mm</span>
+            </div>
+          </div>
+
+          <div class="section-title" style="margin-top:16px;">Label Grid & Dimensions</div>
+
+          <div class="form-grid-2">
+            <div class="form-group unit-addon">
+              <label>Label Width</label>
+              <input type="number" step="0.1" class="input-control" id="input-label-width" value="63.5">
+              <span class="unit-text">mm</span>
+            </div>
+            <div class="form-group unit-addon">
+              <label>Label Height</label>
+              <input type="number" step="0.1" class="input-control" id="input-label-height" value="38.1">
+              <span class="unit-text">mm</span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group">
+              <label>Columns (Across)</label>
+              <input type="number" min="1" class="input-control" id="input-columns" value="3">
+            </div>
+            <div class="form-group">
+              <label>Rows (Down)</label>
+              <input type="number" min="1" class="input-control" id="input-rows" value="7">
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group unit-addon">
+              <label>Top Margin</label>
+              <input type="number" step="0.1" class="input-control" id="input-margin-top" value="15.15">
+              <span class="unit-text">mm</span>
+            </div>
+            <div class="form-group unit-addon">
+              <label>Left Margin</label>
+              <input type="number" step="0.1" class="input-control" id="input-margin-left" value="9.75">
+              <span class="unit-text">mm</span>
+            </div>
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-group unit-addon">
+              <label>Horizontal Gap</label>
+              <input type="number" step="0.1" class="input-control" id="input-gap-h" value="0">
+              <span class="unit-text">mm</span>
+            </div>
+            <div class="form-group unit-addon">
+              <label>Vertical Gap</label>
+              <input type="number" step="0.1" class="input-control" id="input-gap-v" value="0">
+              <span class="unit-text">mm</span>
+            </div>
+          </div>
+
+          <div class="form-group unit-addon">
+            <label>Corner Radius</label>
+            <input type="number" step="0.1" class="input-control" id="input-corner-radius" value="2">
+            <span class="unit-text">mm</span>
+          </div>
+
+          <div class="form-group">
+            <label>Design Target Mode</label>
+            <select class="input-control" id="select-apply-mode">
+              <option value="all">Apply to All Labels on Sheet (Default)</option>
+              <option value="single">Apply to Selected Individual Label</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Tab 2: Add Design Elements -->
+      <div class="tab-content" id="tab-elements">
+        <div class="panel-section">
+          <div class="section-title">Add Content Elements</div>
+          <div class="add-element-grid">
+            <button class="btn-add-element" id="btn-add-text">
+              <span class="element-icon">T</span>
+              <span>Text Box</span>
+            </button>
+            <button class="btn-add-element" id="btn-add-image">
+              <span class="element-icon">🖼️</span>
+              <span>Upload Image</span>
+            </button>
+            <button class="btn-add-element" id="btn-add-barcode">
+              <span class="element-icon">|||||</span>
+              <span>Barcode</span>
+            </button>
+            <button class="btn-add-element" id="btn-add-qrcode">
+              <span class="element-icon">⚃</span>
+              <span>QR Code</span>
+            </button>
+          </div>
+          <input type="file" id="image-file-input" accept="image/*" style="display:none;">
+        </div>
+      </div>
+    </aside>
+
+    <!-- Center Canvas Viewport -->
+    <main class="canvas-viewport">
+      <!-- Toolbar -->
+      <div class="canvas-toolbar">
+        <div class="toolbar-group">
+          <button class="tool-btn" id="btn-undo" title="Undo (Ctrl+Z)">↩ Undo</button>
+          <button class="tool-btn" id="btn-redo" title="Redo (Ctrl+Shift+Z)">↪ Redo</button>
+          <div class="tool-divider"></div>
+          <button class="tool-btn active" id="btn-toggle-snap">🧲 Snap Grid</button>
+          <select class="tool-btn" id="select-grid-size">
+            <option value="0.5">0.5 mm</option>
+            <option value="1" selected>1.0 mm</option>
+            <option value="2">2.0 mm</option>
+            <option value="5">5.0 mm</option>
+          </select>
+        </div>
+
+        <div class="toolbar-group">
+          <button class="tool-btn" id="align-left" title="Align Left">←</button>
+          <button class="tool-btn" id="align-center-h" title="Center Horizontally">↔</button>
+          <button class="tool-btn" id="align-right" title="Align Right">→</button>
+          <div class="tool-divider"></div>
+          <button class="tool-btn" id="align-top" title="Align Top">↑</button>
+          <button class="tool-btn" id="align-center-v" title="Center Vertically">↕</button>
+          <button class="tool-btn" id="align-bottom" title="Align Bottom">↓</button>
+          <div class="tool-divider"></div>
+          <button class="tool-btn" id="z-forward" title="Bring Forward">▲</button>
+          <button class="tool-btn" id="z-backward" title="Send Backward">▼</button>
+        </div>
+
+        <div class="toolbar-group">
+          <label style="font-size:12px; font-weight:600; color:#64748b;">Zoom:</label>
+          <select class="tool-btn" id="select-zoom">
+            <option value="0.25">25%</option>
+            <option value="0.50">50%</option>
+            <option value="0.75">75%</option>
+            <option value="1.00" selected>100% (Actual)</option>
+            <option value="fit">Fit Screen</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Scrollable Preview Area -->
+      <div class="canvas-scroll-area">
+        <div id="canvas-container">
+          <!-- Rendered live via designer.js -->
+        </div>
+      </div>
+    </main>
+
+    <!-- Right Inspector / Element Properties Panel -->
+    <aside class="sidebar-panel sidebar-right">
+      <div class="sidebar-tabs">
+        <button class="tab-btn active">Element Properties</button>
+      </div>
+
+      <div class="tab-content active">
+        <!-- No Selection Placeholder -->
+        <div id="prop-no-selection" class="alert-banner alert-info" style="text-align:center; padding:20px;">
+          👆 Select an element on the canvas to edit its physical properties.
+        </div>
+
+        <!-- Selected Element Editor Card -->
+        <div id="prop-editor-card" style="display:none;">
+
+          <!-- Text Specific Properties -->
+          <div id="prop-group-text" class="panel-section">
+            <div class="section-title">Text Content</div>
+            <div class="form-group">
+              <textarea class="input-control" id="prop-text-content" rows="3" placeholder="Enter text or {{Placeholder}}"></textarea>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Font Family</label>
+                <select class="input-control" id="prop-font-family">
+                  <option value="Arial">Arial</option>
+                  <option value="Helvetica">Helvetica</option>
+                  <option value="Times New Roman">Times</option>
+                  <option value="Courier New">Courier</option>
+                  <option value="Impact">Impact</option>
+                  <option value="Inter">Inter</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Font Size (pt)</label>
+                <input type="number" step="0.5" class="input-control" id="prop-font-size">
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Weight</label>
+                <select class="input-control" id="prop-font-weight">
+                  <option value="normal">Normal</option>
+                  <option value="bold">Bold</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Style</label>
+                <select class="input-control" id="prop-font-style">
+                  <option value="normal">Normal</option>
+                  <option value="italic">Italic</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label>Align</label>
+                <select class="input-control" id="prop-text-align">
+                  <option value="left">Left</option>
+                  <option value="center">Center</option>
+                  <option value="right">Right</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Color</label>
+                <input type="color" class="input-control" id="prop-text-color" style="height:36px; padding:2px;">
+              </div>
+            </div>
+          </div>
+
+          <!-- Barcode Specific Properties -->
+          <div id="prop-group-barcode" class="panel-section" style="display:none;">
+            <div class="section-title">Barcode Properties</div>
+            <div class="form-group">
+              <label>Barcode Value / Tag</label>
+              <input type="text" class="input-control" id="prop-barcode-value">
+            </div>
+            <div class="form-group">
+              <label>Format</label>
+              <select class="input-control" id="prop-barcode-type">
+                <option value="CODE128">CODE128</option>
+                <option value="CODE39">CODE39</option>
+                <option value="EAN13">EAN13</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- QR Specific Properties -->
+          <div id="prop-group-qrcode" class="panel-section" style="display:none;">
+            <div class="section-title">QR Code Properties</div>
+            <div class="form-group">
+              <label>QR Code Data / URL</label>
+              <input type="text" class="input-control" id="prop-qr-value">
+            </div>
+          </div>
+
+          <!-- Physical Geometry & Transform -->
+          <div class="panel-section">
+            <div class="section-title">Position & Dimensions (mm)</div>
+            <div class="form-grid-2">
+              <div class="form-group unit-addon">
+                <label>X Position</label>
+                <input type="number" step="0.1" class="input-control" id="prop-pos-x">
+                <span class="unit-text">mm</span>
+              </div>
+              <div class="form-group unit-addon">
+                <label>Y Position</label>
+                <input type="number" step="0.1" class="input-control" id="prop-pos-y">
+                <span class="unit-text">mm</span>
+              </div>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group unit-addon">
+                <label>Width</label>
+                <input type="number" step="0.1" class="input-control" id="prop-size-w">
+                <span class="unit-text">mm</span>
+              </div>
+              <div class="form-group unit-addon">
+                <label>Height</label>
+                <input type="number" step="0.1" class="input-control" id="prop-size-h">
+                <span class="unit-text">mm</span>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>Rotation (°)</label>
+              <input type="number" step="1" class="input-control" id="prop-rotation">
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn btn-outline" id="btn-prop-duplicate" style="flex:1;">📄 Duplicate</button>
+            <button class="btn btn-danger" id="btn-prop-delete" style="flex:1;">🗑️ Delete</button>
+          </div>
+
+        </div>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Modal 0: VISUAL SIZE CHART GALLERY (Modeled after reference photo) -->
+  <div class="modal-overlay" id="modal-chart">
+    <div class="modal-container" style="max-width: 780px;">
+      <div class="modal-header" style="background:#fffbeb; border-bottom-color:#fcd34d;">
+        <h2 class="modal-title" style="color:#92400e; display:flex; align-items:center; gap:8px;">
+          <span>📐</span>
+          <span>A4 Label Size Chart (Select Packaging Preset)</span>
+        </h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:#64748b; margin-bottom:16px;">
+          Select a layout preset matching your physical A4 label sheet. All dimensions, rows, columns, and margins will be configured automatically.
+        </p>
+
+        <!-- Visual Grid Gallery rendered via app.js -->
+        <div class="chart-grid-gallery" id="modal-size-chart-gallery"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 1: Print Settings & Guidelines -->
+  <div class="modal-overlay" id="modal-print">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">🖨️ Print Label Sheet</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="alert-banner alert-warning">
+          <strong>CRITICAL PRINT INSTRUCTIONS:</strong><br/>
+          In the browser print popup:
+          <ol style="margin-left: 20px; margin-top: 4px;">
+            <li>Set <strong>Scale</strong> to <strong>"Actual Size" / 100%</strong> (Do NOT select "Fit to Page").</li>
+            <li>Set <strong>Margins</strong> to <strong>"None" / 0</strong>.</li>
+            <li>Set <strong>Paper Size</strong> to <strong>A4</strong>.</li>
+          </ol>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="check-print-borders">
+            <span>Show printable label borders (Helper outline)</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+            <input type="checkbox" id="check-print-numbers">
+            <span>Show label sequence numbers</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" id="btn-print-test-dims">Print Dimension Test</button>
+        <button class="btn btn-primary" id="btn-confirm-print">Print Final Sheet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 2: Printer Offset Calibration -->
+  <div class="modal-overlay" id="modal-calibration">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">🎯 Printer Offset Calibration</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:#64748b; margin-bottom:12px;">
+          Adjust physical alignment if your printer slightly shifts output horizontally or vertically.
+        </p>
+
+        <div class="form-grid-2">
+          <div class="form-group unit-addon">
+            <label>Horizontal Offset (+/-)</label>
+            <input type="number" step="0.5" class="input-control" id="input-calib-h" value="0">
+            <span class="unit-text">mm</span>
+          </div>
+          <div class="form-group unit-addon">
+            <label>Vertical Offset (+/-)</label>
+            <input type="number" step="0.5" class="input-control" id="input-calib-v" value="0">
+            <span class="unit-text">mm</span>
+          </div>
+        </div>
+
+        <div style="margin-top:16px;">
+          <button class="btn btn-outline" id="btn-print-calib-sheet" style="width:100%;">
+            📐 Print Calibration Test Sheet (with Ruler Lines)
+          </button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-close-modal">Cancel</button>
+        <button class="btn btn-primary" id="btn-save-calibration">Save Offsets</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Saved Templates Library -->
+  <div class="modal-overlay" id="modal-templates">
+    <div class="modal-container">
+      <div class="modal-header">
+        <h2 class="modal-title">📁 Saved Templates</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="saved-templates-list"></div>
+      </div>
+      <div class="modal-footer">
+        <input type="file" id="input-import-json" accept=".json" style="display:none;">
+        <button class="btn btn-outline" onclick="document.getElementById('input-import-json').click()">Import JSON</button>
+        <button class="btn btn-outline" id="btn-export-json">Export Current JSON</button>
+        <button class="btn btn-secondary btn-close-modal">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 4: Bulk CSV Import -->
+  <div class="modal-overlay" id="modal-csv">
+    <div class="modal-container" style="max-width:650px;">
+      <div class="modal-header">
+        <h2 class="modal-title">📊 Bulk CSV Data Import</h2>
+        <button class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:12px; color:#64748b; margin-bottom:12px;">
+          Upload a CSV file. Text and Barcode elements with <code>{{HeaderName}}</code> tags will be populated line-by-line across labels on the sheet.
+        </p>
+
+        <div style="margin-bottom:16px;">
+          <input type="file" id="btn-import-csv-file" accept=".csv" class="input-control">
+        </div>
+
+        <div id="csv-preview-table"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary btn-close-modal">Cancel</button>
+        <button class="btn btn-primary" id="btn-apply-csv" disabled>Apply CSV to Labels</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS Vendor & Application Scripts -->
+  <script src="js/vendor/jsbarcode.all.min.js"></script>
+  <script src="js/vendor/qrcode.min.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/presets.js"></script>
+  <script src="js/templates.js"></script>
+  <script src="js/designer.js"></script>
+  <script src="js/printer.js"></script>
+  <script src="js/csv.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
