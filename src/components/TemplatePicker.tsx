@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, X, Grid, Check, Sparkles } from 'lucide-react';
+import { Search, X, Grid, Check, Sparkles, Trash2, Cloud, Edit } from 'lucide-react';
 import { LabelTemplate } from '../types/label';
 
 interface TemplatePickerProps {
@@ -8,6 +8,8 @@ interface TemplatePickerProps {
   templates: LabelTemplate[];
   activeTemplateId: string;
   onSelectTemplate: (template: LabelTemplate) => void;
+  onDeleteTemplate?: (templateId: string) => void;
+  onEditTemplate?: (template: LabelTemplate) => void;
 }
 
 export const TemplatePicker: React.FC<TemplatePickerProps> = ({
@@ -15,7 +17,9 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({
   onClose,
   templates,
   activeTemplateId,
-  onSelectTemplate
+  onSelectTemplate,
+  onDeleteTemplate,
+  onEditTemplate
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<'all' | 'small' | 'medium' | 'large'>('all');
@@ -83,8 +87,9 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({
           <div className="flex items-center gap-2">
             <Grid className="w-5 h-5 text-blue-600" />
             <h2 className="text-lg font-bold text-slate-800">Select Label Sheet Template</h2>
-            <span className="text-xs px-2.5 py-0.5 bg-blue-100 text-blue-700 font-semibold rounded-full">
-              {templates.length} Catalog Presets
+            <span className="text-xs px-2.5 py-0.5 bg-blue-100 text-blue-700 font-semibold rounded-full flex items-center gap-1">
+              <Cloud className="w-3 h-3 text-blue-600" />
+              <span>{templates.length} Catalog Presets</span>
             </span>
           </div>
           <button 
@@ -141,6 +146,7 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({
           {filteredTemplates.map(t => {
             const isActive = t.id === activeTemplateId;
             const totalLabels = t.across * t.rows;
+            const isCustom = t.id.startsWith('custom_');
 
             return (
               <div
@@ -154,13 +160,19 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({
                 }`}
               >
                 {isActive && (
-                  <span className="absolute top-2 right-2 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center">
+                  <span className="absolute top-2 right-2 w-5 h-5 bg-blue-600 text-white rounded-full flex items-center justify-center z-10">
                     <Check className="w-3.5 h-3.5" />
                   </span>
                 )}
 
+                {isCustom && (
+                  <span className="absolute top-2 left-2 px-1.5 py-0.5 bg-amber-500 text-white font-extrabold text-[9px] rounded uppercase tracking-wider shadow-2xs">
+                    CUSTOM
+                  </span>
+                )}
+
                 {/* Big Label Count Badge */}
-                <div className="text-xl font-extrabold text-blue-600 group-hover:scale-105 transition-transform">
+                <div className="text-xl font-extrabold text-blue-600 group-hover:scale-105 transition-transform mt-2">
                   {totalLabels}
                 </div>
 
@@ -180,6 +192,41 @@ export const TemplatePicker: React.FC<TemplatePickerProps> = ({
                 </div>
                 <div className="text-[10px] text-slate-400 mt-0.5">
                   {t.across} across × {t.rows} down
+                </div>
+
+                {/* Action buttons (Edit & Delete) */}
+                <div className="mt-2.5 flex items-center gap-1.5 z-10">
+                  {onEditTemplate && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEditTemplate(t);
+                      }}
+                      className="px-2 py-1 bg-slate-100 hover:bg-blue-600 text-slate-600 hover:text-white rounded border border-slate-300 text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                      title="Edit Template Physical Specifications"
+                    >
+                      <Edit className="w-3 h-3" />
+                      <span>Edit</span>
+                    </button>
+                  )}
+
+                  {isCustom && onDeleteTemplate && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (confirm(`Permanently delete custom template "${t.sizeCode}" from Cloud & Local storage?`)) {
+                          onDeleteTemplate(t.id);
+                        }
+                      }}
+                      className="px-2 py-1 bg-red-50 hover:bg-red-600 text-red-600 hover:text-white rounded border border-red-200 text-[10px] font-semibold flex items-center gap-1 transition-colors"
+                      title="Permanently Delete Custom Template"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Delete</span>
+                    </button>
+                  )}
                 </div>
               </div>
             );

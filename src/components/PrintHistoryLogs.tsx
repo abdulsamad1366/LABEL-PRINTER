@@ -6,7 +6,6 @@ interface LoginLogItem {
   id: string;
   user_name: string;
   user_email: string;
-  user_role: string;
   login_timestamp: string;
 }
 
@@ -90,7 +89,6 @@ export const PrintHistoryLogs: React.FC = () => {
                   <th className="p-3">Log Event ID</th>
                   <th className="p-3">Operator Name</th>
                   <th className="p-3">Email Address</th>
-                  <th className="p-3">Role</th>
                   <th className="p-3 text-right">Login Timestamp (UTC)</th>
                 </tr>
               </thead>
@@ -101,11 +99,6 @@ export const PrintHistoryLogs: React.FC = () => {
                       <td className="p-3 font-mono text-blue-400 font-bold">#{log.id.slice(0, 8)}</td>
                       <td className="p-3 font-semibold text-white">{log.user_name || 'Operator'}</td>
                       <td className="p-3 font-mono text-slate-300">{log.user_email}</td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded text-[10px] font-bold">
-                          {log.user_role || 'Production Manager'}
-                        </span>
-                      </td>
                       <td className="p-3 text-right font-mono text-stitch-muted">
                         {new Date(log.login_timestamp).toLocaleString()}
                       </td>
@@ -113,7 +106,7 @@ export const PrintHistoryLogs: React.FC = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="p-6 text-center text-stitch-muted">
+                    <td colSpan={4} className="p-6 text-center text-stitch-muted">
                       {loading ? 'Fetching login history from Supabase...' : 'No login history events recorded yet.'}
                     </td>
                   </tr>

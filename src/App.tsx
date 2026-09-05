@@ -15,8 +15,101 @@ import { LandingPage } from './components/LandingPage';
 import { ERPDashboard } from './components/ERPDashboard';
 import { InventoryManager } from './components/InventoryManager';
 import { PrintHistoryLogs } from './components/PrintHistoryLogs';
+import { 
+  dbSaveCustomTemplate, 
+  dbFetchCustomTemplates, 
+  dbDeleteCustomTemplate, 
+  dbSaveUserElements, 
+  dbFetchUserElements 
+} from './lib/supabase';
+import { SEED_TEMPLATES } from './data/seedPresets';
 
 export type ERPModule = 'dashboard' | 'studio' | 'inventory' | 'audit';
+
+// Helper to generate a clean, modern label template tailored for a new user account
+const getNewUserDefaultElements = (user: User): LabelElement[] => {
+  const brandName = (user.name || user.email.split('@')[0] || 'YOUR BRAND').toUpperCase();
+  const userTag = user.email.split('@')[0].toUpperCase();
+
+  return [
+    {
+      id: 'el_header',
+      type: 'text',
+      x: 3,
+      y: 2.5,
+      width: 57.5,
+      height: 5,
+      content: `${brandName} PRODUCTS`,
+      fontSize: 9.5,
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#0f172a'
+    },
+    {
+      id: 'el_sub',
+      type: 'text',
+      x: 3,
+      y: 8,
+      width: 57.5,
+      height: 4,
+      content: 'PREMIUM PACKAGING LABEL',
+      fontSize: 7,
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#2563eb'
+    },
+    {
+      id: 'el_price',
+      type: 'text',
+      x: 3,
+      y: 13,
+      width: 57.5,
+      height: 4,
+      content: 'PRICE ₹{{price}} | GST {{gst}}',
+      fontSize: 7.5,
+      fontFamily: 'Inter',
+      fontWeight: 'bold',
+      textAlign: 'center',
+      color: '#059669'
+    },
+    {
+      id: 'el_barcode',
+      type: 'barcode',
+      x: 6,
+      y: 18.5,
+      width: 28,
+      height: 17.5,
+      value: `SKU-${userTag.slice(0, 6)}`,
+      barcodeType: 'CODE128',
+      displayValue: true
+    },
+    {
+      id: 'el_qr',
+      type: 'qrcode',
+      x: 38,
+      y: 18.5,
+      width: 17.5,
+      height: 17.5,
+      value: `https://${userTag.toLowerCase()}.labelstudio.app`
+    },
+    {
+      id: 'el_sku',
+      type: 'text',
+      x: 3,
+      y: 38.5,
+      width: 57.5,
+      height: 3.5,
+      content: 'CODE: {{sku}}',
+      fontSize: 6.5,
+      fontFamily: 'JetBrains Mono',
+      fontWeight: 'normal',
+      textAlign: 'center',
+      color: '#475569'
+    }
+  ];
+};
 
 function App() {
   const [templates, setTemplates] = useState<LabelTemplate[]>([]);
@@ -38,85 +131,7 @@ function App() {
     verified: true
   });
 
-  const [elements, setElements] = useState<LabelElement[]>([
-    {
-      id: 'el_header',
-      type: 'text',
-      x: 3,
-      y: 2,
-      width: 57.5,
-      height: 5,
-      content: 'NAFI LOCK INDUSTRIES',
-      fontSize: 10,
-      fontFamily: 'Inter',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      color: '#0f172a'
-    },
-    {
-      id: 'el_sub',
-      type: 'text',
-      x: 3,
-      y: 7.5,
-      width: 57.5,
-      height: 4,
-      content: '90 MM HEAVY DUTY DISC LOCK',
-      fontSize: 7,
-      fontFamily: 'Inter',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      color: '#1d4ed8'
-    },
-    {
-      id: 'el_price',
-      type: 'text',
-      x: 3,
-      y: 12.5,
-      width: 57.5,
-      height: 4,
-      content: 'MRP ₹{{price}} | GST {{gst}}',
-      fontSize: 7.5,
-      fontFamily: 'Inter',
-      fontWeight: 'bold',
-      textAlign: 'center',
-      color: '#047857'
-    },
-    {
-      id: 'el_barcode',
-      type: 'barcode',
-      x: 6,
-      y: 18,
-      width: 28,
-      height: 18,
-      value: 'ABC-70',
-      barcodeType: 'CODE128',
-      displayValue: true
-    },
-    {
-      id: 'el_qr',
-      type: 'qrcode',
-      x: 38,
-      y: 18,
-      width: 18,
-      height: 18,
-      value: 'https://example.com/product/pdl-90'
-    },
-    {
-      id: 'el_sku',
-      type: 'text',
-      x: 3,
-      y: 38,
-      width: 57.5,
-      height: 3.5,
-      content: 'CODE: {{sku}}',
-      fontSize: 6.5,
-      fontFamily: 'JetBrains Mono',
-      fontWeight: 'normal',
-      textAlign: 'center',
-      color: '#475569'
-    }
-  ]);
-
+  const [elements, setElements] = useState<LabelElement[]>([]);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [applyToAll, setApplyToAll] = useState<boolean>(true);
   const [individualOverrides, setIndividualOverrides] = useState<Record<number, LabelElement[]>>({});
@@ -126,13 +141,16 @@ function App() {
     { price: '1799', gst: '18%', sku: 'PDL-120' }
   ]);
   const [calibration, setCalibration] = useState<CalibrationSettings>({ horizontalOffset: 0, verticalOffset: 0 });
-  const [projectName, setProjectName] = useState<string>('Hardware Product Label');
+  const [projectName, setProjectName] = useState<string>('Custom Product Label');
   const [activeTab, setActiveTab] = useState<'editor' | 'preview'>('editor');
   const [selectedLabelIndex, setSelectedLabelIndex] = useState<number>(0);
 
   // ERP State
   const [activeERPModule, setActiveERPModule] = useState<ERPModule>('dashboard');
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Template Editing State
+  const [editingTemplate, setEditingTemplate] = useState<LabelTemplate | null>(null);
 
   // Modals
   const [isTemplatePickerOpen, setIsTemplatePickerOpen] = useState(false);
@@ -149,7 +167,58 @@ function App() {
     setCalibration(loadedCalibration);
     const loadedUser = StorageManager.getUser();
     setCurrentUser(loadedUser);
+
+    // Initial fetch of custom templates from Supabase Cloud DB
+    dbFetchCustomTemplates().then(cloudTemplates => {
+      if (cloudTemplates && cloudTemplates.length > 0) {
+        StorageManager.syncCustomTemplates(cloudTemplates);
+        setTemplates(StorageManager.getTemplates());
+      }
+    });
   }, []);
+
+  // Load / Save Per-User Label Elements dynamically whenever currentUser changes
+  useEffect(() => {
+    if (currentUser) {
+      const savedUserElements = StorageManager.getUserElements(currentUser.email);
+      if (savedUserElements && savedUserElements.length > 0) {
+        setElements(savedUserElements);
+      } else {
+        const newUserLabel = getNewUserDefaultElements(currentUser);
+        setElements(newUserLabel);
+        StorageManager.saveUserElements(currentUser.email, newUserLabel);
+        dbSaveUserElements(currentUser.email, newUserLabel);
+      }
+
+      // Fetch user elements from Supabase Cloud DB (cross-browser sync)
+      dbFetchUserElements(currentUser.email).then(cloudElements => {
+        if (cloudElements && Array.isArray(cloudElements) && cloudElements.length > 0) {
+          setElements(cloudElements);
+          StorageManager.saveUserElements(currentUser.email, cloudElements);
+        }
+      });
+
+      // Fetch custom templates from Supabase Cloud DB on login
+      dbFetchCustomTemplates().then(cloudTemplates => {
+        if (cloudTemplates && cloudTemplates.length > 0) {
+          StorageManager.syncCustomTemplates(cloudTemplates);
+          setTemplates(StorageManager.getTemplates());
+        }
+      });
+    }
+  }, [currentUser]);
+
+  // Save elements automatically whenever they are modified by the current user
+  const handleUpdateElements = (newElements: LabelElement[] | ((prev: LabelElement[]) => LabelElement[])) => {
+    setElements(prev => {
+      const updated = typeof newElements === 'function' ? newElements(prev) : newElements;
+      if (currentUser) {
+        StorageManager.saveUserElements(currentUser.email, updated);
+        dbSaveUserElements(currentUser.email, updated);
+      }
+      return updated;
+    });
+  };
 
   const handleSaveProject = () => {
     const proj: Project = {
@@ -163,14 +232,30 @@ function App() {
       csvData
     };
     StorageManager.saveProject(proj);
-    alert(`Project "${projectName}" saved to local storage.`);
+    alert(`Project "${projectName}" saved permanently.`);
   };
 
   const handleSaveCustomTemplate = (newTpl: LabelTemplate) => {
+    // Save to Local Storage & Supabase Cloud DB
     StorageManager.saveCustomTemplate(newTpl);
+    dbSaveCustomTemplate(newTpl, currentUser?.id);
     const updated = StorageManager.getTemplates();
     setTemplates(updated);
-    setActiveTemplate(newTpl);
+    if (activeTemplate.id === newTpl.id || editingTemplate) {
+      setActiveTemplate(newTpl);
+    }
+    setEditingTemplate(null);
+  };
+
+  const handleDeleteCustomTemplate = (templateId: string) => {
+    // Delete from Local Storage & Supabase Cloud DB
+    StorageManager.deleteCustomTemplate(templateId);
+    dbDeleteCustomTemplate(templateId);
+    const updated = StorageManager.getTemplates();
+    setTemplates(updated);
+    if (activeTemplate.id === templateId) {
+      setActiveTemplate(updated[0] || SEED_TEMPLATES[0]);
+    }
   };
 
   const handleSaveCalibration = (settings: CalibrationSettings) => {
@@ -179,6 +264,9 @@ function App() {
   };
 
   const handleLogout = () => {
+    if (currentUser) {
+      StorageManager.saveUserElements(currentUser.email, elements);
+    }
     StorageManager.logoutUser();
     setCurrentUser(null);
   };
@@ -187,7 +275,7 @@ function App() {
 
   const handleUpdateSelectedElement = (props: Partial<LabelElement>) => {
     if (!selectedElementId) return;
-    setElements(prev => prev.map(el => el.id === selectedElementId ? { ...el, ...props } : el));
+    handleUpdateElements(prev => prev.map(el => el.id === selectedElementId ? { ...el, ...props } : el));
   };
 
   // 1. IF USER IS NOT LOGGED IN -> SHOW LANDING PAGE FIRST!
@@ -308,13 +396,23 @@ function App() {
             </button>
           </nav>
 
-          <div className="p-3 border-t border-slate-100">
+          <div className="p-3 border-t border-slate-100 space-y-1.5">
             <button 
               onClick={() => setIsTemplatePickerOpen(true)}
-              className="w-full py-2.5 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+              className="w-full py-2 bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
             >
               <span className="material-symbols-outlined text-[16px] text-blue-600">widgets</span>
               <span>Change Active Specs</span>
+            </button>
+            <button 
+              onClick={() => {
+                setEditingTemplate(activeTemplate);
+                setIsAdminOpen(true);
+              }}
+              className="w-full py-2 bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-100 rounded-xl font-bold text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-2xs"
+            >
+              <span className="material-symbols-outlined text-[16px] text-blue-600">edit_note</span>
+              <span>Edit Active Specs ({activeTemplate.sizeCode})</span>
             </button>
           </div>
         </aside>
@@ -347,7 +445,7 @@ function App() {
                   <SingleLabelEditor
                     template={activeTemplate}
                     elements={elements}
-                    onChangeElements={setElements}
+                    onChangeElements={handleUpdateElements}
                     selectedElementId={selectedElementId}
                     onSelectElement={setSelectedElementId}
                   />
@@ -373,7 +471,7 @@ function App() {
                 onUpdateElement={handleUpdateSelectedElement}
                 onDeleteElement={() => {
                   if (selectedElementId) {
-                    setElements(prev => prev.filter(el => el.id !== selectedElementId));
+                    handleUpdateElements(prev => prev.filter(el => el.id !== selectedElementId));
                     setSelectedElementId(null);
                   }
                 }}
@@ -383,7 +481,7 @@ function App() {
                     clone.id = `el_${Date.now()}`;
                     clone.x += 2;
                     clone.y += 2;
-                    setElements(prev => [...prev, clone]);
+                    handleUpdateElements(prev => [...prev, clone]);
                     setSelectedElementId(clone.id);
                   }
                 }}
@@ -404,6 +502,12 @@ function App() {
           setActiveTemplate(tpl);
           setSelectedElementId(null);
         }}
+        onDeleteTemplate={handleDeleteCustomTemplate}
+        onEditTemplate={(tpl) => {
+          setEditingTemplate(tpl);
+          setIsAdminOpen(true);
+          setIsTemplatePickerOpen(false);
+        }}
       />
 
       <BulkMailMerge
@@ -415,8 +519,12 @@ function App() {
 
       <TemplateAdminModal
         isOpen={isAdminOpen}
-        onClose={() => setIsAdminOpen(false)}
+        onClose={() => {
+          setIsAdminOpen(false);
+          setEditingTemplate(null);
+        }}
         onSaveTemplate={handleSaveCustomTemplate}
+        editingTemplate={editingTemplate}
       />
 
       <CalibrationModal

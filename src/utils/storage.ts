@@ -1,4 +1,4 @@
-import { LabelTemplate, Project, CalibrationSettings, User } from '../types/label';
+import { LabelTemplate, Project, CalibrationSettings, User, LabelElement } from '../types/label';
 import { SEED_TEMPLATES } from '../data/seedPresets';
 
 const KEYS = {
@@ -28,6 +28,26 @@ export class StorageManager {
     localStorage.removeItem(KEYS.USER);
   }
 
+  // --- Per-User Label Design State ---
+  static getUserElements(userEmail: string): LabelElement[] | null {
+    try {
+      const key = `labelstudio_elements_${userEmail.toLowerCase().trim()}`;
+      const str = localStorage.getItem(key);
+      return str ? JSON.parse(str) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  static saveUserElements(userEmail: string, elements: LabelElement[]): void {
+    try {
+      const key = `labelstudio_elements_${userEmail.toLowerCase().trim()}`;
+      localStorage.setItem(key, JSON.stringify(elements));
+    } catch (err) {
+      console.warn('saveUserElements error:', err);
+    }
+  }
+
   // --- Templates ---
   static getTemplates(): LabelTemplate[] {
     try {
@@ -49,6 +69,25 @@ export class StorageManager {
     }
     localStorage.setItem(KEYS.TEMPLATES, JSON.stringify(templates));
     return template;
+  }
+
+  static deleteCustomTemplate(id: string): void {
+    const templates = this.getCustomTemplates().filter(t => t.id !== id);
+    localStorage.setItem(KEYS.TEMPLATES, JSON.stringify(templates));
+  }
+
+  static syncCustomTemplates(cloudTemplates: LabelTemplate[]): void {
+    if (!cloudTemplates || cloudTemplates.length === 0) return;
+    const localCustom = this.getCustomTemplates();
+    const mergedMap = new Map<string, LabelTemplate>();
+
+    // Local custom first
+    localCustom.forEach(t => mergedMap.set(t.id, t));
+    // Cloud custom overrides / adds
+    cloudTemplates.forEach(t => mergedMap.set(t.id, t));
+
+    const merged = Array.from(mergedMap.values());
+    localStorage.setItem(KEYS.TEMPLATES, JSON.stringify(merged));
   }
 
   static getCustomTemplates(): LabelTemplate[] {

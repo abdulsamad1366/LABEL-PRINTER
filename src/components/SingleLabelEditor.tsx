@@ -559,16 +559,23 @@ const RenderElementInner: React.FC<{ el: LabelElement; zoom: number }> = ({ el, 
 
   if (el.type === 'text') {
     const fontSizePx = (el.fontSize || 10) * 1.333333333 * zoom;
+    const letterSpacingPx = (el.letterSpacing || 0) * zoom;
     return (
       <div 
-        className="w-full h-full flex items-center overflow-hidden leading-tight whitespace-pre-wrap break-words"
+        className="w-full h-full flex items-center overflow-hidden whitespace-pre-wrap break-words"
         style={{
           fontFamily: el.fontFamily || 'Arial',
           fontSize: `${fontSizePx}px`,
           fontWeight: el.fontWeight || 'normal',
           fontStyle: el.fontStyle || 'normal',
+          textDecoration: el.textDecoration || 'none',
+          textTransform: el.textTransform || 'none',
+          letterSpacing: `${letterSpacingPx}px`,
+          lineHeight: el.lineHeight || 1.1,
           color: el.color || '#000000',
-          justifyContent: el.textAlign === 'left' ? 'flex-start' : (el.textAlign === 'right' ? 'flex-end' : 'center')
+          backgroundColor: el.backgroundColor || 'transparent',
+          justifyContent: el.textAlign === 'left' ? 'flex-start' : (el.textAlign === 'right' ? 'flex-end' : (el.textAlign === 'justify' ? 'space-between' : 'center')),
+          textAlign: el.textAlign || 'center'
         }}
       >
         {el.content || ''}

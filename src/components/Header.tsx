@@ -203,9 +203,6 @@ export const Header: React.FC<HeaderProps> = ({
                 <div className="px-4 py-2 border-b border-slate-100">
                   <span className="font-bold text-slate-900 block truncate">{currentUser.name}</span>
                   <span className="text-[11px] text-slate-400 block font-mono truncate">{currentUser.email}</span>
-                  <span className="inline-block mt-1 px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-bold rounded-md">
-                    {currentUser.role}
-                  </span>
                 </div>
                 <button
                   onClick={() => { setIsUserMenuOpen(false); onLogout(); }}

@@ -122,6 +122,10 @@ function renderElementHTML(el: LabelElement): string {
   if (el.type === 'text' && el.content) {
     const fontPt = el.fontSize || 10;
     const fontMm = (fontPt * 0.3527777778).toFixed(3);
+    const bgStyle = el.backgroundColor ? `background-color: ${el.backgroundColor};` : '';
+    const decStyle = el.textDecoration ? `text-decoration: ${el.textDecoration};` : '';
+    const transformStyle = el.textTransform ? `text-transform: ${el.textTransform};` : '';
+
     return `<div class="print-element" style="
       left: ${el.x}mm;
       top: ${el.y}mm;
@@ -132,12 +136,15 @@ function renderElementHTML(el: LabelElement): string {
       font-size: ${fontMm}mm;
       font-weight: ${el.fontWeight || 'normal'};
       font-style: ${el.fontStyle || 'normal'};
+      ${decStyle}
+      ${transformStyle}
+      ${bgStyle}
       text-align: ${el.textAlign || 'center'};
       color: ${el.color || '#000000'};
       letter-spacing: ${el.letterSpacing || 0}px;
       line-height: ${el.lineHeight || 1.1};
       display: flex; align-items: center; justify-content: ${
-        el.textAlign === 'left' ? 'flex-start' : (el.textAlign === 'right' ? 'flex-end' : 'center')
+        el.textAlign === 'left' ? 'flex-start' : (el.textAlign === 'right' ? 'flex-end' : (el.textAlign === 'justify' ? 'space-between' : 'center'))
       }; word-break: break-word; white-space: pre-wrap;
     ">${escapeHtml(el.content)}</div>`;
   }
@@ -186,10 +193,15 @@ function applyRowDataToElements(elements: LabelElement[], row: DataRow): LabelEl
   });
 }
 
-function replacePlaceholders(str: string, data: DataRow): string {
+function replacePlaceholders(str: string, data?: DataRow): string {
+  if (!str) return '';
   return str.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_, key) => {
     const trimmed = key.trim();
-    return data[trimmed] !== undefined ? data[trimmed] : `{{${trimmed}}}`;
+    if (data && data[trimmed] !== undefined) return data[trimmed];
+    if (trimmed === 'price') return '1,299';
+    if (trimmed === 'gst') return '18%';
+    if (trimmed === 'sku') return 'PROD-001';
+    return trimmed;
   });
 }
 

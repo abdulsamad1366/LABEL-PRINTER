@@ -148,16 +148,50 @@ async function renderPdfElement(doc: jsPDF, el: LabelElement, labelX: number, la
   const y = labelY + el.y;
 
   if (el.type === 'text' && el.content) {
+    let content = el.content;
+    if (el.textTransform === 'uppercase') content = content.toUpperCase();
+    else if (el.textTransform === 'lowercase') content = content.toLowerCase();
+    else if (el.textTransform === 'capitalize') {
+      content = content.replace(/\b\w/g, char => char.toUpperCase());
+    }
+
     const fontPt = el.fontSize || 10;
     doc.setFontSize(fontPt);
-    doc.setFont('helvetica', el.fontStyle === 'italic' ? 'italic' : (el.fontWeight === 'bold' ? 'bold' : 'normal'));
+    
+    const isBold = el.fontWeight === 'bold' || el.fontWeight === '700' || el.fontWeight === '600' || el.fontWeight === '800' || el.fontWeight === '900';
+    const isItalic = el.fontStyle === 'italic';
+    let style = 'normal';
+    if (isBold && isItalic) style = 'bolditalic';
+    else if (isBold) style = 'bold';
+    else if (isItalic) style = 'italic';
+    
+    // Choose jsPDF built-in standard font family fallback
+    const family = (el.fontFamily || '').toLowerCase();
+    let pdfFontFamily = 'helvetica';
+    if (family.includes('times') || family.includes('serif') || family.includes('georgia') || family.includes('playfair') || family.includes('merriweather') || family.includes('cinzel')) {
+      pdfFontFamily = 'times';
+    } else if (family.includes('courier') || family.includes('mono') || family.includes('code')) {
+      pdfFontFamily = 'courier';
+    }
+
+    try {
+      doc.setFont(pdfFontFamily, style);
+    } catch {
+      doc.setFont('helvetica', style);
+    }
+
+    // Optional background fill
+    if (el.backgroundColor && el.backgroundColor !== 'transparent') {
+      doc.setFillColor(el.backgroundColor);
+      doc.rect(x, y, el.width, el.height, 'F');
+    }
     
     if (el.color) doc.setTextColor(el.color);
     else doc.setTextColor(0, 0, 0);
 
     // Multi-line text splitting
-    const lines = doc.splitTextToSize(el.content, el.width);
-    const align = el.textAlign || 'center';
+    const lines = doc.splitTextToSize(content, el.width);
+    const align = (el.textAlign === 'justify' ? 'left' : (el.textAlign || 'center')) as 'left' | 'center' | 'right' | 'justify';
     let textX = x + el.width / 2;
     if (align === 'left') textX = x;
     if (align === 'right') textX = x + el.width;
@@ -208,9 +242,14 @@ function applyRowDataToElements(elements: LabelElement[], row: DataRow): LabelEl
   });
 }
 
-function replacePlaceholders(str: string, data: DataRow): string {
+function replacePlaceholders(str: string, data?: DataRow): string {
+  if (!str) return '';
   return str.replace(/\{\{\s*([^}]+)\s*\}\}/g, (_, key) => {
     const trimmed = key.trim();
-    return data[trimmed] !== undefined ? data[trimmed] : `{{${trimmed}}}`;
+    if (data && data[trimmed] !== undefined) return data[trimmed];
+    if (trimmed === 'price') return '1,299';
+    if (trimmed === 'gst') return '18%';
+    if (trimmed === 'sku') return 'PROD-001';
+    return trimmed;
   });
 }

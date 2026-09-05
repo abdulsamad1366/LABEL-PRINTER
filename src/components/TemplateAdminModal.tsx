@@ -1,17 +1,19 @@
-import React, { useState } from 'react';
-import { Settings, X, Plus, Check } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Settings, X, Plus, Edit, Check } from 'lucide-react';
 import { LabelTemplate, FinishType } from '../types/label';
 
 interface TemplateAdminModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSaveTemplate: (template: LabelTemplate) => void;
+  editingTemplate?: LabelTemplate | null;
 }
 
 export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
   isOpen,
   onClose,
-  onSaveTemplate
+  onSaveTemplate,
+  editingTemplate
 }) => {
   const [sizeCode, setSizeCode] = useState('');
   const [widthMm, setWidthMm] = useState<number>(63.5);
@@ -19,12 +21,58 @@ export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
   const [across, setAcross] = useState<number>(3);
   const [rows, setRows] = useState<number>(7);
   const [marginTopMm, setMarginTopMm] = useState<number>(15.15);
+  const [marginBottomMm, setMarginBottomMm] = useState<number>(15.15);
   const [marginLeftMm, setMarginLeftMm] = useState<number>(9.75);
+  const [marginRightMm, setMarginRightMm] = useState<number>(9.75);
   const [colGapMm, setColGapMm] = useState<number>(0);
   const [rowGapMm, setRowGapMm] = useState<number>(0);
   const [finish, setFinish] = useState<FinishType>('Uncoated 70');
 
+  useEffect(() => {
+    if (editingTemplate) {
+      setSizeCode(editingTemplate.sizeCode);
+      setWidthMm(editingTemplate.widthMm);
+      setHeightMm(editingTemplate.heightMm);
+      setAcross(editingTemplate.across);
+      setRows(editingTemplate.rows);
+      setMarginTopMm(editingTemplate.marginTopMm);
+      setMarginBottomMm(editingTemplate.marginBottomMm || editingTemplate.marginTopMm);
+      setMarginLeftMm(editingTemplate.marginLeftMm);
+      setMarginRightMm(editingTemplate.marginRightMm || editingTemplate.marginLeftMm);
+      setColGapMm(editingTemplate.colGapMm);
+      setRowGapMm(editingTemplate.rowGapMm);
+      setFinish(editingTemplate.finish || 'Uncoated 70');
+    } else {
+      setSizeCode('');
+      setWidthMm(63.5);
+      setHeightMm(38.1);
+      setAcross(3);
+      setRows(7);
+      setMarginTopMm(15.15);
+      setMarginBottomMm(15.15);
+      setMarginLeftMm(9.75);
+      setMarginRightMm(9.75);
+      setColGapMm(0);
+      setRowGapMm(0);
+      setFinish('Uncoated 70');
+    }
+  }, [editingTemplate, isOpen]);
+
   if (!isOpen) return null;
+
+  const handleAutoCalculateGaps = () => {
+    // A4 dimensions: 210mm x 297mm
+    const sheetWidth = 210;
+    const sheetHeight = 297;
+    const availWidth = sheetWidth - marginLeftMm - marginRightMm - (across * widthMm);
+    const calculatedColGap = across > 1 ? Math.max(0, availWidth / (across - 1)) : 0;
+
+    const availHeight = sheetHeight - marginTopMm - marginBottomMm - (rows * heightMm);
+    const calculatedRowGap = rows > 1 ? Math.max(0, availHeight / (rows - 1)) : 0;
+
+    setColGapMm(parseFloat(calculatedColGap.toFixed(2)));
+    setRowGapMm(parseFloat(calculatedRowGap.toFixed(2)));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,15 +81,17 @@ export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
       return;
     }
 
-    const newTemplate: LabelTemplate = {
-      id: `custom_${sizeCode.toLowerCase()}_${Date.now()}`,
+    const savedTemplate: LabelTemplate = {
+      id: editingTemplate ? editingTemplate.id : `custom_${sizeCode.toLowerCase()}_${Date.now()}`,
       sizeCode: sizeCode.toUpperCase(),
       widthMm,
       heightMm,
       across,
       rows,
       marginTopMm,
+      marginBottomMm,
       marginLeftMm,
+      marginRightMm,
       colGapMm,
       rowGapMm,
       sheetWidthMm: 210,
@@ -51,7 +101,7 @@ export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
       verified: true
     };
 
-    onSaveTemplate(newTemplate);
+    onSaveTemplate(savedTemplate);
     onClose();
   };
 
@@ -62,8 +112,16 @@ export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between bg-slate-50">
           <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5 text-blue-600" />
-            <h2 className="text-lg font-bold text-slate-800">Template Admin (Create Custom Size)</h2>
+            {editingTemplate ? <Edit className="w-5 h-5 text-blue-600" /> : <Settings className="w-5 h-5 text-blue-600" />}
+            <div>
+              <h2 className="text-base font-bold text-slate-800">
+                {editingTemplate ? `Edit Template Specs (${editingTemplate.sizeCode})` : 'Template Admin (Create Custom Size)'}
+              </h2>
+              <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>Saved Permanently to Supabase Cloud & Synced Across Browsers</span>
+              </p>
+            </div>
           </div>
           <button 
             onClick={onClose}
@@ -136,26 +194,60 @@ export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Top Margin (mm)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={marginTopMm}
-                onChange={(e) => setMarginTopMm(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono"
-              />
+          {/* Page Margins Grid */}
+          <div>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-bold text-slate-700">Sheet Margins (mm)</label>
+              <button
+                type="button"
+                onClick={handleAutoCalculateGaps}
+                className="text-[11px] font-semibold text-blue-600 hover:text-blue-800 hover:underline flex items-center gap-1 cursor-pointer"
+                title="Auto-calculate column & row gaps from margins and sheet size"
+              >
+                Auto-calculate Gaps
+              </button>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">Left Margin (mm)</label>
-              <input
-                type="number"
-                step="0.1"
-                value={marginLeftMm}
-                onChange={(e) => setMarginLeftMm(parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono"
-              />
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Top Margin</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={marginTopMm}
+                  onChange={(e) => setMarginTopMm(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Bottom Margin</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={marginBottomMm}
+                  onChange={(e) => setMarginBottomMm(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Left Margin</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={marginLeftMm}
+                  onChange={(e) => setMarginLeftMm(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500"
+                />
+              </div>
+              <div>
+                <label className="block text-[11px] font-semibold text-slate-600 mb-1">Right Margin</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={marginRightMm}
+                  onChange={(e) => setMarginRightMm(parseFloat(e.target.value) || 0)}
+                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500 text-blue-600 font-bold"
+                />
+              </div>
             </div>
           </div>
 
@@ -213,8 +305,8 @@ export const TemplateAdminModal: React.FC<TemplateAdminModalProps> = ({
               type="submit"
               className="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center gap-1.5"
             >
-              <Plus className="w-4 h-4" />
-              <span>Save Size Code Template</span>
+              {editingTemplate ? <Edit className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              <span>{editingTemplate ? 'Update Template Specs' : 'Save Size Code Template'}</span>
             </button>
           </div>
         </form>

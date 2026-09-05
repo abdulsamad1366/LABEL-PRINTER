@@ -20,6 +20,8 @@ export interface LabelTemplate {
   rows: number;          // Rows down
   marginTopMm: number;
   marginLeftMm: number;
+  marginRightMm?: number;
+  marginBottomMm?: number;
   colGapMm: number;
   rowGapMm: number;
   sheetWidthMm?: number;  // Default 210
@@ -45,10 +47,13 @@ export interface LabelElement {
   content?: string;
   fontSize?: number; // pt
   fontFamily?: string;
-  fontWeight?: 'normal' | 'bold';
-  fontStyle?: 'normal' | 'italic';
-  textAlign?: 'left' | 'center' | 'right';
+  fontWeight?: string;
+  fontStyle?: 'normal' | 'italic' | 'oblique';
+  textDecoration?: 'none' | 'underline' | 'line-through' | 'underline line-through';
+  textTransform?: 'none' | 'uppercase' | 'lowercase' | 'capitalize';
+  textAlign?: 'left' | 'center' | 'right' | 'justify';
   color?: string;
+  backgroundColor?: string;
   letterSpacing?: number;
   lineHeight?: number;
   
@@ -88,6 +93,5 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'Production Manager' | 'Label Designer' | 'Guest';
   avatarUrl?: string;
 }

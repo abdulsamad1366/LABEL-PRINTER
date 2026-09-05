@@ -36,7 +36,6 @@ export const LoginModal: React.FC<LoginModalProps> = ({
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'Production Manager' | 'Label Designer'>('Production Manager');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState('');
@@ -57,66 +56,64 @@ export const LoginModal: React.FC<LoginModalProps> = ({
       return;
     }
 
-    setLoading(mode === 'signup' ? 'Creating account...' : 'Signing in...');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long.');
+      return;
+    }
+
+    setLoading(mode === 'signup' ? 'Saving user credentials in Supabase...' : 'Signing in with Supabase...');
 
     try {
       let authenticatedUser: User | null = null;
 
       if (isSupabaseConfigured) {
         if (mode === 'signup') {
-          const { data, error: sbErr } = await supabaseSignUp(email, password, name, role);
+          // 1. Register User in Supabase Auth & Guarantee DB insertion into public.profiles
+          const { userId } = await supabaseSignUp(email, password, name);
           
-          if (data?.user) {
-            authenticatedUser = {
-              id: data.user.id,
-              name,
-              email,
-              role
-            };
-          } else if (sbErr) {
-            console.warn('Supabase SignUp warning:', sbErr.message);
-          }
+          authenticatedUser = {
+            id: userId,
+            name,
+            email
+          };
         } else {
-          const { data, error: sbErr } = await supabaseSignIn(email, password);
-          
-          if (data?.user) {
-            authenticatedUser = {
-              id: data.user.id,
-              name: data.user.user_metadata?.name || email.split('@')[0],
-              email: data.user.email || email,
-              role: data.user.user_metadata?.role || 'Production Manager'
-            };
-          } else if (sbErr) {
-            // Handle Supabase "Email not confirmed" setting gracefully
-            if (sbErr.message.toLowerCase().includes('email not confirmed')) {
-              console.warn('Supabase requires email confirmation; creating active operator session.');
+          try {
+            // 2. Sign In User with Supabase Auth
+            const { data } = await supabaseSignIn(email, password);
+            if (data?.user) {
               authenticatedUser = {
-                id: `usr_${Date.now()}`,
-                name: name || email.split('@')[0],
-                email,
-                role
+                id: data.user.id,
+                name: data.user.user_metadata?.name || name || email.split('@')[0],
+                email: data.user.email || email
               };
-            } else {
-              throw sbErr;
             }
+          } catch (sbErr: any) {
+            const errText = (sbErr.message || '').toLowerCase();
+            if (errText.includes('invalid login credentials') || errText.includes('invalid credentials')) {
+              throw new Error('Invalid email address or password. Please check your credentials.');
+            }
+            // Proceed with fallback for rate limits or unconfirmed emails
+            authenticatedUser = {
+              id: `usr_${Date.now()}`,
+              name: name || email.split('@')[0],
+              email
+            };
           }
         }
       }
 
       if (!authenticatedUser) {
-        // Fallback operator session
         authenticatedUser = {
           id: `usr_${Date.now()}`,
           name: mode === 'signup' ? name : (email.split('@')[0] || 'User'),
-          email,
-          role: mode === 'signup' ? role : 'Production Manager'
+          email
         };
       }
 
       // 1. Save user session locally
       StorageManager.saveUser(authenticatedUser);
 
-      // 2. Log login event history into Supabase database!
+      // 2. Log login event history & save profile into Supabase database tables (public.profiles & public.user_login_history)!
       await dbLogUserLogin(authenticatedUser);
 
       onLoginSuccess(authenticatedUser);
@@ -328,7 +325,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
               {/* Password */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                  Password
+                  Password (min 6 characters)
                 </label>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -339,6 +336,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                     placeholder="Enter your password"
                     className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-600/10 transition-all"
                     required
+                    minLength={6}
                   />
                   <button
                     type="button"
@@ -357,30 +355,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({
                 )}
               </div>
 
-              {/* Role Select (Sign Up Only) */}
-              {mode === 'signup' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5">
-                    Account Role
-                  </label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value as 'Production Manager' | 'Label Designer')}
-                    className="w-full px-3.5 py-2.5 bg-white border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-blue-600"
-                  >
-                    <option value="Production Manager">Production Manager (Full Admin Access)</option>
-                    <option value="Label Designer">Label Designer (Design & Print Access)</option>
-                  </select>
-                </div>
-              )}
-
               {/* Submit Button */}
               <button
                 type="submit"
                 disabled={Boolean(loading)}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl shadow-md shadow-blue-600/25 transition-all cursor-pointer disabled:opacity-50"
               >
-                {loading || (mode === 'signin' ? 'Sign In' : 'Create Account & Sign In')}
+                {loading || (mode === 'signin' ? 'Sign In with Supabase' : 'Register in Supabase & Sign In')}
               </button>
 
             </form>
